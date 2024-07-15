@@ -130,18 +130,10 @@ int CheckBattery(){
     
     //todo what voltage to check
     if(ret == 0 && adc_mV > 3000){
-        CHG_DISA_SetHigh();
-        PWR_LED_CTRL_SetHigh();
-        //set bit0 of reg2 STAT
-        CLIENT_DATA[2] |= 1;
-        
+        EnableBatterCharge();
     }
     else{
-        CHG_DISA_SetLow();
-        PWR_LED_CTRL_SetLow();
-        //clear bit0 of reg2 STAT
-        CLIENT_DATA[2] &= ~(1);
-
+        DisableBatteryCharge();
     }
     
     //disable ADC
