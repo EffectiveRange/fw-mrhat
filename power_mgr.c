@@ -101,7 +101,7 @@ void DisableBatteryCharge(){
 }
 void EnableBatteryCharge(){
     // /CE pin of battery management ic is active low
-    // CHG_DISA pin=1 -> Charge enable
+    // CHG_DISA pin=0 -> Charge enable
     CHG_DISA_SetLow();
     //set bit0 of reg2 STAT
     CLIENT_DATA[2] |= 1;
