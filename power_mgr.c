@@ -93,12 +93,16 @@ int I2CWrite(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len){
 
 
 void DisableBatteryCharge(){
-    CHG_DISA_SetLow();
+    // /CE pin of battery management ic is active low
+    // CHG_DISA pin=1 -> Charge disable
+    CHG_DISA_SetHigh();
     //clear bit0 of reg2 STAT
     CLIENT_DATA[2] &= ~(1);
 }
 void EnableBatteryCharge(){
-    CHG_DISA_SetHigh();
+    // /CE pin of battery management ic is active low
+    // CHG_DISA pin=1 -> Charge enable
+    CHG_DISA_SetLow();
     //set bit0 of reg2 STAT
     CLIENT_DATA[2] |= 1;
 }
