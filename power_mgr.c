@@ -6,12 +6,21 @@ extern volatile uint8_t CLIENT_DATA[];
 
 
 //todo move to somewhere else
-uint64_t free_run_timer = 0;
+volatile uint64_t free_run_timer = 0;
 void MiliSecTimerOverflow(void)
 {
     free_run_timer++;
-    if((free_run_timer % 1000) == 0){
-        PWR_LED_CTRL_Toggle();
+    
+    if((CLIENT_DATA[2] & 0x1) == 1){
+        //bat charge enabled
+        if((free_run_timer % 500) == 0){
+            PWR_LED_CTRL_Toggle();
+        }
+    }else{
+        //bat charge disabled
+        if((free_run_timer % 2000) == 0){
+            PWR_LED_CTRL_Toggle();
+        }
     }
 }
 uint64_t GetTimeMs(){
@@ -32,7 +41,7 @@ typedef enum {
     kI2C_Error,
     kI2C_Success
 }I2CState;
-I2CState i2c_state = kI2C_Dummy;
+volatile I2CState i2c_state = kI2C_Dummy;
 
 
 void I2CSuccess(){
@@ -85,13 +94,11 @@ int I2CWrite(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len){
 
 void DisableBatteryCharge(){
     CHG_DISA_SetLow();
-    PWR_LED_CTRL_SetLow();
     //clear bit0 of reg2 STAT
     CLIENT_DATA[2] &= ~(1);
 }
-void EnableBatterCharge(){
+void EnableBatteryCharge(){
     CHG_DISA_SetHigh();
-    PWR_LED_CTRL_SetHigh();
     //set bit0 of reg2 STAT
     CLIENT_DATA[2] |= 1;
 }
@@ -102,7 +109,6 @@ int CheckBattery(){
     //i2c setup
     I2C1_Host_ReadyCallbackRegister(I2CSuccess);
     I2C1_Host_CallbackRegister(I2CError);     
-    
 
     //# enable Force a battery discharging current (~30mA)
     //#REG0x16_Charger_Control_1 Register, BIT6 FORCE_IBATDIS
@@ -110,6 +116,9 @@ int CheckBattery(){
     ret += I2CWriteRead(0x6b, tx,1, rx, 1);
     tx[1] = rx[0] | (1<<6);
     ret += I2CWrite(0x6b, tx, 2);
+    
+    //little delay for discharge current, I know it has a speed of light :D
+    DelayMS(10);
 
     //# enable ADC  
     //#REG0x26_ADC_Control Register,BIT7 ADC_EN
@@ -117,6 +126,9 @@ int CheckBattery(){
     ret += I2CWriteRead(0x6b, tx,1, rx, 1);
     tx[1] = rx[0] | (1<<7);
     ret += I2CWrite(0x6b, tx, 2);
+    
+    //adc sample takes 24milisec
+    DelayMS(100);
 
     //# read ADC 
     //#REG0x30_VBAT_ADC Register bits 1:12
@@ -128,11 +140,10 @@ int CheckBattery(){
     adc_bits = adc_bits >> 1;
     float adc_mV = adc_bits * 1.99f; //mili Volt
     
-    //todo what voltage to check
-    if(ret == 0 && adc_mV > 3000){
-        EnableBatterCharge();
-    }
-    else{
+     //VSYSMIN value is ~2500mV under 2000mV there is no battery
+    if(ret == 0 && adc_mV > 2000){
+        EnableBatteryCharge();
+    }else{
         DisableBatteryCharge();
     }
     
