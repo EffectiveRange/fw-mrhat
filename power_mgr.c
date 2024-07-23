@@ -91,21 +91,6 @@ int I2CWrite(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len){
     return -1;
 }
 
-
-void DisableBatteryCharge(){
-    // /CE pin of battery management ic is active low
-    // CHG_DISA pin=1 -> Charge disable
-    CHG_DISA_SetHigh();
-    //clear bit0 of reg2 STAT
-    CLIENT_DATA[2] &= ~(1);
-}
-void EnableBatteryCharge(){
-    // /CE pin of battery management ic is active low
-    // CHG_DISA pin=0 -> Charge enable
-    CHG_DISA_SetLow();
-    //set bit0 of reg2 STAT
-    CLIENT_DATA[2] |= 1;
-}
 int CheckBattery(){
     uint8_t tx[2];
     uint8_t rx[2];
@@ -115,10 +100,12 @@ int CheckBattery(){
     I2C1_Host_CallbackRegister(I2CError);     
 
     //# enable Force a battery discharging current (~30mA)
-    //#REG0x16_Charger_Control_1 Register, BIT6 FORCE_IBATDIS
+    //#REG0x16_Charger_Control_1 Register, 
+    // BIT6 FORCE_IBATDIS
+    // BIT2 WATCHDOG reset
     tx[0]=0x16;
     ret += I2CWriteRead(0x6b, tx,1, rx, 1);
-    tx[1] = rx[0] | (1<<6);
+    tx[1] = rx[0] | (1<<6) | (1<<2);
     ret += I2CWrite(0x6b, tx, 2);
     
     //little delay for discharge current, I know it has a speed of light :D
@@ -144,19 +131,79 @@ int CheckBattery(){
     adc_bits = adc_bits >> 1;
     float adc_mV = adc_bits * 1.99f; //mili Volt
     
-     //VSYSMIN value is ~2500mV under 2000mV there is no battery
-    if(ret == 0 && adc_mV > 2000){
-        EnableBatteryCharge();
-    }else{
-        DisableBatteryCharge();
-    }
     
-    //disable ADC
+    
+     //disable ADC
     //#REG0x26_ADC_Control Register,BIT7 ADC_EN
     tx[0]=0x26;
     ret += I2CWriteRead(0x6b, tx,1, rx, 1);
     tx[1] = rx[0] & ~(1<<7);
     ret += I2CWrite(0x6b, tx, 2);
+    
+    //# disable Force a battery discharging current (~30mA)
+    //#REG0x16_Charger_Control_1 Register, BIT6 FORCE_IBATDIS
+//    tx[0]=0x16;
+//    ret += I2CWriteRead(0x6b, tx,1, rx, 1);
+//    tx[1] = rx[0] & ~(1<<6);
+//    ret += I2CWrite(0x6b, tx, 2);
+    
+    
+
+    
+     //RESET all registers
+    //#REG0x17_Charger_Control_2 Register ,BIT7 REG_RST
+    tx[0]=0x17;
+    ret += I2CWriteRead(0x6b, tx,1, rx, 1);
+    tx[1] = rx[0] | (1<<7);
+    ret += I2CWrite(0x6b, tx, 2);
+    
+    
+    
+    //VSYSMIN value is ~2500mV under 2000mV there is no battery
+    if(ret == 0 && adc_mV > 2000){
+        //# Charger enable register of bat manager ic
+        //#REG0x16_Charger_Control_1 Register, BIT5 EN_CHG
+        // 1 : enable
+        // 0 : disable
+        tx[0]=0x16;
+        ret += I2CWriteRead(0x6b, tx,1, rx, 1);
+        tx[1] = rx[0] | (1<<5);
+        ret += I2CWrite(0x6b, tx, 2);
+        
+        
+        // /CE pin of battery management ic is active low
+        // CHG_DISA pin=0 -> Charge enable
+        CHG_DISA_SetLow();
+        
+        //set bit0 of reg2 STAT
+        CLIENT_DATA[2] |= 1;
+
+        
+    }else{
+        //# Charger enable register of bat manager ic
+        //#REG0x16_Charger_Control_1 Register, BIT5 EN_CHG
+        // 1 : enable
+        // 0 : disable
+        tx[0]=0x16;
+        ret += I2CWriteRead(0x6b, tx,1, rx, 1);
+        tx[1] = rx[0] & ~(1<<5);
+        ret += I2CWrite(0x6b, tx, 2);
+        
+        
+        // /CE pin of battery management ic is active low
+        // CHG_DISA pin=1 -> Charge disable
+        CHG_DISA_SetHigh();
+        
+        //clear bit0 of reg2 STAT
+        CLIENT_DATA[2] &= ~(1);
+        
+        
+    }
+    
+   
+    
+    
+    
     return ret;
     
 }
