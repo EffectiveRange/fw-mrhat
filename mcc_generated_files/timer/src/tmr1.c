@@ -86,8 +86,8 @@ void TMR1_Initialize(void)
     // Enabling TMRI interrupt.
      PIE3bits.TMR1IE = 1;
     
-    //TMRON disabled; TRD16 disabled; nTSYNC do_not_synchronize; TCKPS 1:8; 
-    T1CON = 0x34;
+    //TMRON enabled; TRD16 disabled; nTSYNC do_not_synchronize; TCKPS 1:8; 
+    T1CON = 0x35;
 }
 
 void TMR1_Start(void)

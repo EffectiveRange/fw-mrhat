@@ -189,10 +189,6 @@ int CheckBattery(){
         
     }
     
-   
-    
-    
-    
     return ret;
     
 }
