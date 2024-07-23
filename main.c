@@ -34,18 +34,27 @@
 
 #include "tasks.h"
 #include "onoff.h"
+#include "power_mgr.h"
 /*
     Main application
  */
 
-
+extern void MiliSecTimerOverflow();
 #define I2C_CLIENT_LOCATION_SIZE 10
 
 //Private functions
 static bool Client_Application(i2c_client_transfer_event_t event);
 
+
+//reg 0 FW id
+//reg1 IRQ reg
+//  bit0: shallow shut
+//  bit1: deep shutdown reg
+//reg2 STAT
+//  bit0: battery_available
+
 // Private variable
-volatile static uint8_t CLIENT_DATA[I2C_CLIENT_LOCATION_SIZE] = {
+volatile uint8_t CLIENT_DATA[I2C_CLIENT_LOCATION_SIZE] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09
 };
 
@@ -135,7 +144,6 @@ void retry_read_device_id(void) {
     if (I2C1_ErrorGet() == I2C_ERROR_BUS_COLLISION) {
         resume_task(TASK_I2C_WAKEUP);
     }
-
 }
 
 static int client_mode = 0;
@@ -183,25 +191,14 @@ void OnOffSwithcPressed(enum ONOFFTypes type) {
 
 }
 
-static struct DemoTastState{
-    uint32_t last_exec;
-} demo_state;
 
-void demo_blink(){
-    demo_state.last_exec += 1;
-    if(demo_state.last_exec % 128 == 0){
-        PWR_LED_CTRL_Toggle();
-        demo_state.last_exec = 0;
-    }
-}
 
-int main(void) {
+int main(){
     SYSTEM_Initialize();
 
     // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts 
     // If using interrupts in PIC Mid-Range Compatibility Mode you need to enable the Global Interrupts 
     // Use the following macros to: 
-    I2C1_Client.CallbackRegister(Client_Application);
 
     TASKS_Initialize();
     ONOFF_Initialize();
@@ -214,9 +211,27 @@ int main(void) {
     INTERRUPT_GlobalInterruptLowEnable();
     // Disable the Global Interrupts 
     //INTERRUPT_GlobalInterruptDisable();
-    PWR_LED_CTRL_SetLow();
-    CHG_DISA_SetHigh();
-    demo_state.last_exec = 0;
+    
+    //1msec freerunngin timer irq
+    TMR1_OverflowCallbackRegister(MiliSecTimerOverflow);
+
+    
+    //go to host mode
+    I2C1_Switch_Mode(I2C1_HOST_MODE);
+    
+    //set charge enable when battery is present
+    CheckBattery();
+    
+    //go back to client mode
+    I2C1_Switch_Mode(I2C1_CLIENT_MODE);
+    I2C1_Client.CallbackRegister(Client_Application);
+
+    
     run_tasks();
     return 0;
 }
+
+
+
+
+

@@ -46,6 +46,11 @@ void SYSTEM_Initialize(void)
     CLOCK_Initialize();
     PIN_MANAGER_Initialize();
     BQQON_Sampling_Initialize();
+    
+    //free running timer 1msec irq
+    Timer1_Initialize();
+    Timer1_Start();
+    
     I2C1_Multi_Initialize();
     MVIO_Initialize();
     INTERRUPT_Initialize();

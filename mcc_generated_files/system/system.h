@@ -43,6 +43,7 @@
 #include "../system/clock.h"
 #include "../system/pins.h"
 #include "../timer/tmr0.h"
+#include "../timer/tmr1.h"
 #include "../i2c_host/i2c1_multimode.h"
 #include "../system/mvio.h"
 #include "../system/interrupt.h"
