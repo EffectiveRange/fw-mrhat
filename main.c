@@ -11,7 +11,7 @@
  */
 
 /*
-© [2023] Microchip Technology Inc. and its subsidiaries.
+ï¿½ [2023] Microchip Technology Inc. and its subsidiaries.
 
     Subject to your compliance with these terms, you may use Microchip 
     software and any derivatives exclusively with Microchip products. 
@@ -35,88 +35,18 @@
 #include "tasks.h"
 #include "onoff.h"
 #include "power_mgr.h"
+#include "main.h"
+#include "timers.h"
+#include "i2c_app.h"
+#include "i2c_regs.h"
+#include "led_ctrl.h"
+#include "pi_mgr.h"
 /*
     Main application
  */
 
+//todo move to timer init
 extern void MiliSecTimerOverflow();
-#define I2C_CLIENT_LOCATION_SIZE 10
-
-//Private functions
-static bool Client_Application(i2c_client_transfer_event_t event);
-
-
-//reg 0 FW id
-//reg1 IRQ reg
-//  bit0: shallow shut
-//  bit1: deep shutdown reg
-//reg2 STAT
-//  bit0: battery_available
-
-// Private variable
-volatile uint8_t CLIENT_DATA[I2C_CLIENT_LOCATION_SIZE] = {
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09
-};
-
-static uint8_t clientLocation = 0x00;
-static bool isClientLocation = false;
-
-static bool Client_Application(i2c_client_transfer_event_t event) {
-    switch (event) {
-        case I2C_CLIENT_TRANSFER_EVENT_ADDR_MATCH: //Address Match Event
-            if (I2C1_Client.TransferDirGet() == I2C_CLIENT_TRANSFER_DIR_WRITE) {
-                isClientLocation = true;
-            }
-            break;
-
-        case I2C_CLIENT_TRANSFER_EVENT_RX_READY: //Read the data sent by I2C Host
-            if (isClientLocation) {
-                clientLocation = I2C1_Client.ReadByte();
-                isClientLocation = false;
-                break;
-            } else {
-                CLIENT_DATA[clientLocation++] = I2C1_Client.ReadByte();
-                if (clientLocation >= I2C_CLIENT_LOCATION_SIZE) {
-                    clientLocation = 0x00;
-                }
-            }
-            break;
-
-        case I2C_CLIENT_TRANSFER_EVENT_TX_READY: //Provide the Client data requested by the I2C Host
-            I2C1_Client.WriteByte(CLIENT_DATA[clientLocation++]);
-            if (clientLocation >= I2C_CLIENT_LOCATION_SIZE) {
-                clientLocation = 0x00;
-            }
-            break;
-
-        case I2C_CLIENT_TRANSFER_EVENT_STOP_BIT_RECEIVED: //Stop Communication
-            clientLocation = 0x00;
-            break;
-
-        case I2C_CLIENT_TRANSFER_EVENT_ERROR: //Error Event Handler
-            clientLocation = 0x00;
-            i2c_client_error_t errorState = I2C1_Client.ErrorGet();
-            if (errorState == I2C_CLIENT_ERROR_BUS_COLLISION) {
-                // Bus Collision Error Handling
-            } else if (errorState == I2C_CLIENT_ERROR_WRITE_COLLISION) {
-                // Write Collision Error Handling
-            } else if (errorState == I2C_CLIENT_ERROR_RECEIVE_OVERFLOW) {
-                // Receive Overflow Error Handling
-            } else if (errorState == I2C_CLIENT_ERROR_TRANSMIT_UNDERFLOW) {
-                // Transmit Underflow Error Handling
-            } else if (errorState == I2C_CLIENT_ERROR_READ_UNDERFLOW) {
-                // Read Underflow Error Handling
-            }
-            break;
-
-        default:
-            break;
-    }
-    return true;
-}
-
-
-
 
 static uint8_t regAddrBuff[] = {0x18};
 static uint8_t regAddrBuff2[] = {0x38};
@@ -151,46 +81,39 @@ static int host_mode = 0;
 
 void switch_i2c_mode(volatile struct TaskDescr* taskd) {
     if (taskd->task_state == &client_mode) {
-        I2C1_Switch_Mode(I2C1_CLIENT_MODE);
-        I2C1_Client.CallbackRegister(Client_Application);
+        I2CSwitchMode(I2C1_CLIENT_MODE);
+        
     } else {
-        I2C1_Switch_Mode(I2C1_HOST_MODE);
+        I2CSwitchMode(I2C1_HOST_MODE);
     }
     rm_task(TASK_I2C_SWITCH_MODE);
-}
-
-void PIRunModeChanged() {
-    if (PI_RUN_GetValue()) {
-        add_task(TASK_I2C_SWITCH_MODE, switch_i2c_mode, &client_mode);
-    } else {
-        add_task(TASK_I2C_SWITCH_MODE, switch_i2c_mode, &host_mode);
-    }
 }
 
 
 void OnOffSwithcPressed(enum ONOFFTypes type) {
     switch (type) {
         case BTN_1L:
-            if (I2C1_Current_Mode() == I2C1_HOST_MODE) {
-                add_task(TASK_I2C_WAKEUP, read_device_id, regAddrBuff);
-            }
-            CHG_DISA_Toggle();
+            add_task(TASK_PI_SHUTDOWN_OR_WAKEUP,TaskPIShutdownOrWakeup,NULL);
+//            ShutdownButtonPressed();
             break;
         case BTN_1S_1L:
-            if (I2C1_Current_Mode() == I2C1_HOST_MODE) {
-                add_task(TASK_I2C_WAKEUP, read_device_id, regAddrBuff2);
-            }
-            I2C_SEL_N_Toggle();
+            //wake up pi
+//            MCU_INT_N_SetHigh();
+//            if (I2C1_Current_Mode() == I2C1_HOST_MODE) {
+//                add_task(TASK_I2C_WAKEUP, read_device_id, regAddrBuff2);
+//            }
+//            I2C_SEL_N_Toggle();
             break;
         case BTN_1S_1S_1L:
-            if (I2C1_Current_Mode() == I2C1_HOST_MODE) {
-                add_task(TASK_I2C_WAKEUP, read_device_id, regAddrBuff2);
-            }
+            add_task(TASK_POWER_IC_SYSTEM_RESET,PowMgrSystemReset,NULL);
+            
+//            if (I2C1_Current_Mode() == I2C1_HOST_MODE) {
+//                add_task(TASK_I2C_WAKEUP, read_device_id, regAddrBuff2);
+//            }
             break;
     };
 
 }
-
 
 
 int main(){
@@ -204,8 +127,18 @@ int main(){
     ONOFF_Initialize();
 
     ONOFF_CallbackRegister(OnOffSwithcPressed);
+    
+    //add rtc irq handler
+    RTC_IRQ_N_SetInterruptHandler(RTCPinChanged);
+            
 
+    //enable PI RUN pin irq
+    SET_PI_HB_NOT_OK(); //by default no HB recorded
+
+    
     PI_RUN_SetInterruptHandler(PIRunModeChanged);
+    add_task(TASK_PI_MONITOR, TaskPIMonitor, NULL);
+    
     // Enable the Global Interrupts 
     INTERRUPT_GlobalInterruptHighEnable();
     INTERRUPT_GlobalInterruptLowEnable();
@@ -214,24 +147,24 @@ int main(){
     
     //1msec freerunngin timer irq
     TMR1_OverflowCallbackRegister(MiliSecTimerOverflow);
-
     
     //go to host mode
     I2C1_Switch_Mode(I2C1_HOST_MODE);
     
     //set charge enable when battery is present
-    CheckBattery();
+    PowMgrEnableDisableCharging();
     
     //go back to client mode
-    I2C1_Switch_Mode(I2C1_CLIENT_MODE);
-    I2C1_Client.CallbackRegister(Client_Application);
-
+    I2CSwitchMode(I2C1_CLIENT_MODE);
+    
+    //led control setup
+    //set led 0 by default
+    PWM1_16BIT_Period_SetInterruptHandler(LED_UpdateCallback);
+    LEDSetValue(0);
     
     run_tasks();
     return 0;
 }
-
-
 
 
 

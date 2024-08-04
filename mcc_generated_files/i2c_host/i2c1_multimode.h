@@ -21,6 +21,7 @@ extern "C" {
 enum I2C1_Mode{
     I2C1_HOST_MODE,
     I2C1_CLIENT_MODE,
+    I2C1_NOT_INITED,
 };
 
 enum I2C1_Mode I2C1_Current_Mode(void);

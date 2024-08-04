@@ -34,6 +34,7 @@
 
 #include "../pins.h"
 
+void (*RTC_IRQ_N_InterruptHandler)(void);
 void (*PI_RUN_InterruptHandler)(void);
 
 void PIN_MANAGER_Initialize(void)
@@ -43,7 +44,7 @@ void PIN_MANAGER_Initialize(void)
     */
     LATA = 0x0;
     LATB = 0x80;
-    LATC = 0x31;
+    LATC = 0x11;
 
     /**
     TRISx registers
@@ -102,6 +103,7 @@ void PIN_MANAGER_Initialize(void)
     INT0PPS = 0x11; //RC1->INTERRUPT MANAGER:INT0;
     INT1PPS = 0x2; //RA2->INTERRUPT MANAGER:INT1;
     INT2PPS = 0x17; //RC7->INTERRUPT MANAGER:INT2;
+    RC0PPS = 0x07;  //RC0->PWM1_16BIT:PWM11;
     I2C1SCLPPS = 0xE;  //RB6->I2C1:SCL1;
     RB6PPS = 0x1C;  //RB6->I2C1:SCL1;
     I2C1SDAPPS = 0xD;  //RB5->I2C1:SDA1;
@@ -110,8 +112,8 @@ void PIN_MANAGER_Initialize(void)
    /**
     IOCx registers 
     */
-    IOCAP = 0x0;
-    IOCAN = 0x0;
+    IOCAP = 0x4;
+    IOCAN = 0x4;
     IOCAF = 0x0;
     IOCWP = 0x0;
     IOCWN = 0x0;
@@ -123,6 +125,7 @@ void PIN_MANAGER_Initialize(void)
     IOCCN = 0x40;
     IOCCF = 0x0;
 
+    RTC_IRQ_N_SetInterruptHandler(RTC_IRQ_N_DefaultInterruptHandler);
     PI_RUN_SetInterruptHandler(PI_RUN_DefaultInterruptHandler);
 
     // Enable PIE3bits.IOCIE interrupt 
@@ -131,11 +134,46 @@ void PIN_MANAGER_Initialize(void)
   
 void PIN_MANAGER_IOC(void)
 {
+    // interrupt on change for pin RTC_IRQ_N
+    if(IOCAFbits.IOCAF2 == 1)
+    {
+        RTC_IRQ_N_ISR();  
+    }
     // interrupt on change for pin PI_RUN
     if(IOCCFbits.IOCCF6 == 1)
     {
         PI_RUN_ISR();  
     }
+}
+   
+/**
+   RTC_IRQ_N Interrupt Service Routine
+*/
+void RTC_IRQ_N_ISR(void) {
+
+    // Add custom RTC_IRQ_N code
+
+    // Call the interrupt handler for the callback registered at runtime
+    if(RTC_IRQ_N_InterruptHandler)
+    {
+        RTC_IRQ_N_InterruptHandler();
+    }
+    IOCAFbits.IOCAF2 = 0;
+}
+
+/**
+  Allows selecting an interrupt handler for RTC_IRQ_N at application runtime
+*/
+void RTC_IRQ_N_SetInterruptHandler(void (* InterruptHandler)(void)){
+    RTC_IRQ_N_InterruptHandler = InterruptHandler;
+}
+
+/**
+  Default interrupt handler for RTC_IRQ_N
+*/
+void RTC_IRQ_N_DefaultInterruptHandler(void){
+    // add your RTC_IRQ_N interrupt custom code
+    // or set custom function using RTC_IRQ_N_SetInterruptHandler()
 }
    
 /**

@@ -1,104 +1,99 @@
 
 #include "mcc_generated_files/system/system.h"
+#include "tasks.h"
+#include "i2c_app.h"
+#include "timers.h"
 
-extern void DelayMS(uint32_t delay_ms);
+
 extern volatile uint8_t CLIENT_DATA[];
 
 
-//todo move to somewhere else
-volatile uint64_t free_run_timer = 0;
-void MiliSecTimerOverflow(void)
-{
-    free_run_timer++;
+
+
+void PowMgrSystemReset(volatile struct TaskDescr* taskd){
     
-    if((CLIENT_DATA[2] & 0x1) == 1){
-        //bat charge enabled
-        if((free_run_timer % 500) == 0){
-            PWR_LED_CTRL_Toggle();
-        }
-    }else{
-        //bat charge disabled
-        if((free_run_timer % 2000) == 0){
-            PWR_LED_CTRL_Toggle();
-        }
-    }
-}
-uint64_t GetTimeMs(){
-    return free_run_timer;
-}
-
-void DelayMS(uint32_t delay_ms){
-    uint64_t now_ms = free_run_timer;
-    while(free_run_timer < (now_ms+delay_ms));
-}
-//end todo
-
-
-#define I2C_TRY_CNT 3U
-#define I2C_TMOUT_MS 100U
-typedef enum {
-    kI2C_Dummy,
-    kI2C_Error,
-    kI2C_Success
-}I2CState;
-volatile I2CState i2c_state = kI2C_Dummy;
-
-
-void I2CSuccess(){
-    i2c_state=kI2C_Success;
-}
-void I2CError(){
-    i2c_state=kI2C_Error;
-}
-int I2CWriteRead(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint8_t* rx_buf, size_t rx_len){
-    for(size_t i = 0; i<I2C_TRY_CNT; i++){
-        uint64_t start_time_ms = GetTimeMs();
-        i2c_state=kI2C_Dummy;
-        if (!I2C1_WriteRead(dev_addr, tx_buf, tx_len, rx_buf, rx_len)) {
-            DelayMS(10);
-            continue;
-        }
-        while(i2c_state==kI2C_Dummy){
-            if(GetTimeMs() - start_time_ms > I2C_TMOUT_MS){
-                return -1;
-            }
-        }
-        if(i2c_state==kI2C_Success){
-            return 0;
-        }
-    }
-    return -1;
-}
-
-int I2CWrite(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len){
-    //tx_buf: byte0-reg_addr, byte1:... data
-    for(size_t i = 0; i<I2C_TRY_CNT; i++){
-        uint64_t start_time_ms = GetTimeMs();
-        i2c_state=kI2C_Dummy;
-        if (!I2C1_Write(dev_addr, tx_buf, tx_len)) {
-            DelayMS(10);
-            continue;
-        }
-        while(i2c_state==kI2C_Dummy){
-            if(GetTimeMs() - start_time_ms > I2C_TMOUT_MS){
-                return -1;
-            }
-        }
-        if(i2c_state==kI2C_Success){
-            return 0;
-        }
-    }
-    return -1;
-}
-
-int CheckBattery(){
     uint8_t tx[2];
     uint8_t rx[2];
     int ret=0;
+    tx[0]=0x18;
     
-    //i2c setup
-    I2C1_Host_ReadyCallbackRegister(I2CSuccess);
-    I2C1_Host_CallbackRegister(I2CError);     
+     I2CSwitchMode(I2C1_HOST_MODE);
+     
+     
+    //Trigger power IC system reset
+    //#REG0x18_Charger_Control_3 Register
+    //BIT3 BATFET_CTRL_WV_BUS -allows batfet off or system power reset with adapter present.
+    //0->disable
+    //1->enable
+    
+    //BIT2 BATFET_DLY - Delay time added to the taking action in bits [1:0] of the BATFET_CTRL
+    //0x0 = Add 20 ms delay time
+    //0x1 = Add 10s delay time (default)
+    
+    //BIT0:1 BATFET_CTRL
+    //The control logic of the BATFET to force the device enter different modes.
+    //0x0 = Normal (default)
+    //0x1 = Shutdown Mode
+    //0x2 = Ship Mode
+    //0x3 = System Power Reset
+    
+    ret += I2CWriteRead(0x6b, tx,1, rx, 1);
+    //enable BATFET_CTRL_WVBUS
+    //go to ship mode
+    tx[1] = rx[0] | (0x3) | (1<<3) ;
+    //set delay to 20ms
+    tx[1] = tx[1] & ~(1<<2);
+    //default it takes 10sec to go to ship mode after request
+    ret += I2CWrite(0x6b, tx, 2);
+    
+    //here the POWER IC should be reseted
+    //todo handle error
+    //todo blink period just for debug
+    timer_blink_period=200;
+    rm_task(TASK_POWER_IC_SYSTEM_RESET);
+
+//    return ret;
+}
+int PowMgrGoToShipMode(void){
+    
+    
+    
+        
+    uint8_t tx[2];
+    uint8_t rx[2];
+    int ret=0;
+    tx[0]=0x18;
+    
+    I2CSwitchMode(I2C1_HOST_MODE);
+    
+    //Trigger power IC go to ship mode
+    //#REG0x18_Charger_Control_3 Register
+    //BIT3 BATFET_CTRL_WV BUS -allows BATFET off or system power reset with adapter present.
+    //0->disable
+    //1->enable
+    //BIT0:1 BATFET_CTRL
+    //The control logic of the BATFET to force the device enter different modes.
+    //0x0 = Normal (default)
+    //0x1 = Shutdown Mode
+    //0x2 = Ship Mode
+    //0x3 = System Power Reset
+    
+    ret += I2CWriteRead(0x6b, tx,1, rx, 1);
+    //enable BATFET_CTRL_WVBUS
+    //go to ship mode
+    tx[1] = rx[0] | (0x2) | (1<<3) ;
+    //default it takes 10sec to go to ship mode after request
+    ret += I2CWrite(0x6b, tx, 2);
+    return ret;
+    
+}
+//note: set i2c to host mode before calling
+int PowMgrEnableDisableCharging(){
+    
+    uint8_t tx[2];
+    uint8_t rx[2];
+    int ret=0;
+   
 
     // enable Force a battery discharging current (~30mA)
     // reset watchdog
@@ -122,7 +117,6 @@ int CheckBattery(){
     
     //adc sample takes 24milisec
     DelayMS(100);
-
     //# read ADC 
     //#REG0x30_VBAT_ADC Register bits 1:12
     tx[0]=0x30;

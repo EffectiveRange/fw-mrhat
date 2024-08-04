@@ -11,9 +11,11 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
-    int CheckBattery(void);
-
+    uint64_t GetTimeMs(void);
+    void PowMgrSystemReset(volatile struct TaskDescr*);
+    int PowMgrEnableDisableCharging(void);
+    int PowMgrGoToShipMode(void);
+    void DelayMS(uint32_t delay_ms);
 
 #ifdef	__cplusplus
 }
