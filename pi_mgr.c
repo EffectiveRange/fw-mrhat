@@ -143,7 +143,7 @@ void TaskWakeupPI(volatile struct TaskDescr* taskd){
     uint8_t rx[2];
     int ret=0;
     tx[0]=0x1D; //charge stat
-    ret += I2CWriteRead(0x6b, tx,1, rx, 1);
+    ret += I2CWriteReadNoIsolator(0x6b, tx,1, rx, 1);
     
     //go back to client mode
     I2CSwitchMode(I2C1_CLIENT_MODE);
