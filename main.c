@@ -149,7 +149,7 @@ int main(){
     TMR1_OverflowCallbackRegister(MiliSecTimerOverflow);
     
     //go to host mode
-    I2C1_Switch_Mode(I2C1_HOST_MODE);
+    I2CSwitchMode(I2C1_HOST_MODE);
     
     //set charge enable when battery is present
     PowMgrEnableDisableCharging();
