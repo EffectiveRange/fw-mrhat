@@ -63,11 +63,16 @@ extern "C" {
     
 //reg 11: power related
 //  bit0: battery present
+//  bit1: bat check error occured
 #define REG_BAT_STAT_0_ADDR 11
 #define SET_BAT_AVAIL()  do { CLIENT_DATA[REG_BAT_STAT_0_ADDR] |= 0x1; } while(0);
 #define CLEAR_BAT_AVAIL()  do { CLIENT_DATA[REG_BAT_STAT_0_ADDR] &=~(0x1) ; } while(0);
 #define IS_BAT_AVAIL()  ((CLIENT_DATA[REG_BAT_STAT_0_ADDR]&0x1) == 0x1)
-    
+ 
+#define SET_BAT_CHCEK_ERR()  do { CLIENT_DATA[REG_BAT_STAT_0_ADDR] |= 0x2; } while(0);
+#define CLEAR_BAT_ERR()  do { CLIENT_DATA[REG_BAT_STAT_0_ADDR] &=~(0x2) ; } while(0);
+#define IS_BAT_CHECK_ERR()  ((CLIENT_DATA[REG_BAT_STAT_0_ADDR]&0x1) == 0x2)
+  
     
 //reg 19: i2c error reg + stciky bit ( i2c err + | 0x80 sticky bit)
 //  bit0-6: i2c err status

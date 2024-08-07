@@ -183,6 +183,14 @@ int PowMgrEnableDisableCharging(){
         CLEAR_BAT_AVAIL();
         
     }
+    if(ret != 0){
+        SET_BAT_CHCEK_ERR();
+//        CLIENT_DATA[12]=(uint8_t)(ret*-1);
+    }
+    else{
+        CLEAR_BAT_ERR();
+    }
+    
     
     return ret;
     
