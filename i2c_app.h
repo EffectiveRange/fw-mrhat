@@ -16,7 +16,6 @@ extern "C" {
 
     
     
-#define I2C_CLIENT_LOCATION_SIZE 10
     
 #define I2C_TRY_CNT 3U
 #define I2C_TMOUT_MS 100U
@@ -29,7 +28,6 @@ int I2CWriteNoIsolator(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len);
 
 int I2CWriteRead(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint8_t* rx_buf, size_t rx_len);
 int I2CWriteReadNoIsolator(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint8_t* rx_buf, size_t rx_len);
-
 
 void I2CSwitchMode(enum I2C1_Mode new_mode);
 

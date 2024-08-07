@@ -127,6 +127,7 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
     
     pi_monitor_first_time=false;
     
+    rm_task(TASK_PI_MONITOR);
 }
 
 void TaskWakeupPI(volatile struct TaskDescr* taskd){

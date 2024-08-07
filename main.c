@@ -137,7 +137,7 @@ int main(){
 
     
     PI_RUN_SetInterruptHandler(PIRunModeChanged);
-    add_task(TASK_PI_MONITOR, TaskPIMonitor, NULL);
+//    add_task(TASK_PI_MONITOR, TaskPIMonitor, NULL);
     
     // Enable the Global Interrupts 
     INTERRUPT_GlobalInterruptHighEnable();
@@ -156,6 +156,7 @@ int main(){
     
     //go back to client mode
     I2CSwitchMode(I2C1_CLIENT_MODE);
+    I2C_SEL_N_SetHigh();
     
     //led control setup
     //set led 0 by default

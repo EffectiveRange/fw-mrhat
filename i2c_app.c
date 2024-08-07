@@ -2,6 +2,7 @@
 #include "mcc_generated_files/system/system.h"
 #include "i2c_app.h"
 #include "timers.h"
+#include "i2c_regs.h"
 
 
 typedef enum {
@@ -20,7 +21,9 @@ bool Client_Application(i2c_client_transfer_event_t event);
 
 // Private variable
 volatile uint8_t CLIENT_DATA[I2C_CLIENT_LOCATION_SIZE] = {
-    0x55, 0x01, 0x0, 0x03, 0, 0x05, 0x06, 0x07, 0x08, 0x09
+//    0   1     2    3     4    5     6     7     8     9
+    0x00, 0x0,  0x0, 0x0,  0x0, 0x0,  0x0,  0x00, 0x00, 0x00,
+    0x00, 0x0,  0x0, 0x0,  0x0, 0x0,  0x0,  0x0,  0x0,  0x80 //last has sticky bit
 };
 
 volatile static uint8_t clientLocation = 0x00;
@@ -39,9 +42,15 @@ bool Client_Application(i2c_client_transfer_event_t event) {
                 isClientLocation = false;
                 break;
             } else {
-                CLIENT_DATA[clientLocation++] = I2C1_Client.ReadByte();
-                if (clientLocation >= I2C_CLIENT_LOCATION_SIZE) {
+                //allow only writable registers
+                if(clientLocation<REG_ADDR_WR_START || 
+                        clientLocation>REG_ADDR_WR_END){
                     clientLocation = 0x00;
+                }
+                
+                CLIENT_DATA[clientLocation++] = I2C1_Client.ReadByte();
+                if (clientLocation > REG_ADDR_WR_END) {
+                    clientLocation = REG_ADDR_WR_START;
                 }
             }
             break;
@@ -60,7 +69,7 @@ bool Client_Application(i2c_client_transfer_event_t event) {
         case I2C_CLIENT_TRANSFER_EVENT_ERROR: //Error Event Handler
             clientLocation = 0x00;
             i2c_client_error_t errorState = I2C1_Client.ErrorGet();
-            CLIENT_DATA[9] = errorState;
+            CLIENT_DATA[REG_STAT_I2C_ERR_AND_STICKY_ADDR]=errorState | 0x80;
             if (errorState == I2C_CLIENT_ERROR_BUS_COLLISION) {
                 // Bus Collision Error Handling
             } else if (errorState == I2C_CLIENT_ERROR_WRITE_COLLISION) {
