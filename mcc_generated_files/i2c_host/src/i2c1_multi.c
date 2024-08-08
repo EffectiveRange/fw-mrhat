@@ -1,7 +1,7 @@
 #include "../i2c1_multimode.h"
 #include "../../system/interrupt.h"
 
-static enum I2C1_Mode _I2C1_Multi_Mode = I2C1_CLIENT_MODE;
+static enum I2C1_Mode _I2C1_Multi_Mode = I2C1_NOT_INITED;
 
 enum I2C1_Mode I2C1_Current_Mode(void) {
     return _I2C1_Multi_Mode;
@@ -13,7 +13,7 @@ void I2C1_Switch_Mode(enum I2C1_Mode target) {
     }
     INTERRUPT_GlobalInterruptLowDisable();
     INTERRUPT_GlobalInterruptHighDisable();
-    if (_I2C1_Multi_Mode == I2C1_CLIENT_MODE) {
+    if (target == I2C1_HOST_MODE) {
         I2C1_Client_Deinitialize();
         I2C1_Host_Initialize();
         _I2C1_Multi_Mode = I2C1_HOST_MODE;

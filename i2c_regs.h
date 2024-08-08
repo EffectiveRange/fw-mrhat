@@ -60,28 +60,32 @@ extern "C" {
 #define IS_PI_HB_OK()  ((CLIENT_DATA[REG_STAT_0_ADDR]&0x2) == 0x2)
 #define IS_PI_HB_NOT_OK()  ((CLIENT_DATA[REG_STAT_0_ADDR]&0x2) == 0x0)
 
-    
+
 //reg 11: power related
 //  bit0: battery present
 //  bit1: bat check error occured
 #define REG_BAT_STAT_0_ADDR 11
-#define SET_BAT_AVAIL()  do { CLIENT_DATA[REG_BAT_STAT_0_ADDR] |= 0x1; } while(0);
-#define CLEAR_BAT_AVAIL()  do { CLIENT_DATA[REG_BAT_STAT_0_ADDR] &=~(0x1) ; } while(0);
-#define IS_BAT_AVAIL()  ((CLIENT_DATA[REG_BAT_STAT_0_ADDR]&0x1) == 0x1)
+#define BAT_AVAIL_POS 0
+#define BAT_AVAIL (1<<BAT_AVAIL_POS)
+#define BAT_AVAIL_MASK (~(1<<BAT_AVAIL_POS)) & 0xFF
+#define SET_BAT_AVAIL()  do { CLIENT_DATA[REG_BAT_STAT_0_ADDR] |= (BAT_AVAIL); } while(0);
+#define CLEAR_BAT_AVAIL()  do { CLIENT_DATA[REG_BAT_STAT_0_ADDR] &= ~(BAT_AVAIL) ; } while(0);
+#define IS_BAT_AVAIL()  ((CLIENT_DATA[REG_BAT_STAT_0_ADDR] & BAT_AVAIL_MASK ) == (BAT_AVAIL))
  
-#define SET_BAT_CHCEK_ERR()  do { CLIENT_DATA[REG_BAT_STAT_0_ADDR] |= 0x2; } while(0);
-#define CLEAR_BAT_ERR()  do { CLIENT_DATA[REG_BAT_STAT_0_ADDR] &=~(0x2) ; } while(0);
-#define IS_BAT_CHECK_ERR()  ((CLIENT_DATA[REG_BAT_STAT_0_ADDR]&0x1) == 0x2)
-  
-    
+ 
+#define BAT_CHECK_ERR_POS 1
+#define BAT_CHECK_ERR (1<<BAT_CHECK_ERR_POS)
+#define BAT_CHECK_ERR_MASK (~(1<<BAT_CHECK_ERR_POS)) & 0xFF
+#define SET_BAT_CHCEK_ERR()  do { CLIENT_DATA[REG_BAT_STAT_0_ADDR] |= BAT_CHECK_ERR; } while(0);
+#define CLEAR_BAT_ERR()  do { CLIENT_DATA[REG_BAT_STAT_0_ADDR] &=~(BAT_CHECK_ERR) ; } while(0);
+#define IS_BAT_CHECK_ERR()  ((CLIENT_DATA[REG_BAT_STAT_0_ADDR] & BAT_CHECK_ERR_MASK) == (BAT_CHECK_ERR))
+
+
 //reg 19: i2c error reg + stciky bit ( i2c err + | 0x80 sticky bit)
 //  bit0-6: i2c err status
 //  bit7:   always 1
 #define REG_STAT_I2C_ERR_AND_STICKY_ADDR 19
 
-
-    
-    
 
 #define I2C_CLIENT_LOCATION_SIZE 20
     

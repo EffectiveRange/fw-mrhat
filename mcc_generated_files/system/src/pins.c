@@ -44,7 +44,7 @@ void PIN_MANAGER_Initialize(void)
     */
     LATA = 0x0;
     LATB = 0x80;
-    LATC = 0x11;
+    LATC = 0x81;
 
     /**
     TRISx registers
@@ -72,7 +72,7 @@ void PIN_MANAGER_Initialize(void)
     */
     ODCONA = 0x0;
     ODCONB = 0xE0;
-    ODCONC = 0x39;
+    ODCONC = 0xB9;
 
     /**
     SLRCONx registers

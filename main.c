@@ -118,10 +118,12 @@ void OnOffSwithcPressed(enum ONOFFTypes type) {
 
 int main(){
     SYSTEM_Initialize();
+    I2C1_Multi_Initialize();
 
     // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts 
     // If using interrupts in PIC Mid-Range Compatibility Mode you need to enable the Global Interrupts 
-    // Use the following macros to: 
+    // Use the following macros to:
+    
 
     TASKS_Initialize();
     ONOFF_Initialize();
@@ -130,14 +132,10 @@ int main(){
     
     //add rtc irq handler
     RTC_IRQ_N_SetInterruptHandler(RTCPinChanged);
-            
 
     //enable PI RUN pin irq
     SET_PI_HB_NOT_OK(); //by default no HB recorded
-
-    
     PI_RUN_SetInterruptHandler(PIRunModeChanged);
-//    add_task(TASK_PI_MONITOR, TaskPIMonitor, NULL);
     
     // Enable the Global Interrupts 
     INTERRUPT_GlobalInterruptHighEnable();
@@ -149,7 +147,9 @@ int main(){
     TMR1_OverflowCallbackRegister(MiliSecTimerOverflow);
     
     //go to host mode
+    I2C_SEL_N_SetLow();
     I2CSwitchMode(I2C1_HOST_MODE);
+    
     
     //set charge enable when battery is present
     PowMgrEnableDisableCharging();

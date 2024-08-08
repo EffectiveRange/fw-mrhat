@@ -4,6 +4,7 @@
 #include "i2c_app.h"
 #include "timers.h"
 #include "i2c_regs.h"
+#include "power_mgr.h"
 
 
 extern volatile uint8_t CLIENT_DATA[];
@@ -18,7 +19,7 @@ void PowMgrSystemReset(volatile struct TaskDescr* taskd){
     int ret=0;
     tx[0]=0x18;
     
-     I2CSwitchMode(I2C1_HOST_MODE);
+    I2CSwitchMode(I2C1_HOST_MODE);
      
      
     //Trigger power IC system reset
@@ -48,9 +49,7 @@ void PowMgrSystemReset(volatile struct TaskDescr* taskd){
     ret += I2CWrite(0x6b, tx, 2);
     
     //here the POWER IC should be reseted
-    //todo handle error
-    //todo blink period just for debug
-    timer_blink_period=200;
+    
     rm_task(TASK_POWER_IC_SYSTEM_RESET);
 
 //    return ret;
@@ -95,6 +94,23 @@ int PowMgrEnableDisableCharging(){
     uint8_t rx[2];
     int ret=0;
    
+    //test i2c read, if could not read partid do not check battery return
+    uint8_t i=0;
+    for(int i =0;i<10;i++){
+        //raead partid
+        tx[0]=0x38;
+        ret += I2CWriteReadNoIsolator(0x6b, tx,1, rx, 1);
+        if((rx[0] & (1<<3)) == (1<<3)){
+            break;
+        }
+        DelayMS(10);
+        
+    }
+    //if read partid failed return
+    if((rx[0] & (1<<3)) != (1<<3)){
+        return -1;
+    }
+    
 
     // enable Force a battery discharging current (~30mA)
     // reset watchdog
@@ -102,50 +118,49 @@ int PowMgrEnableDisableCharging(){
     // BIT6 FORCE_IBATDIS
     // BIT2 WATCHDOG reset
     tx[0]=0x16;
-    ret += I2CWriteRead(0x6b, tx,1, rx, 1);
+    ret += I2CWriteReadNoIsolator(0x6b, tx,1, rx, 1);
     tx[1] = rx[0] | (1<<6) | (1<<2);
-    ret += I2CWrite(0x6b, tx, 2);
+    ret += I2CWriteNoIsolator(0x6b, tx, 2);
     
     //little delay for discharge current, I know it has a speed of light :D
-    DelayMS(10);
+    DelayMS(100);
 
     //# enable ADC  
     //#REG0x26_ADC_Control Register,BIT7 ADC_EN
     tx[0]=0x26;
-    ret += I2CWriteRead(0x6b, tx,1, rx, 1);
+    ret += I2CWriteReadNoIsolator(0x6b, tx,1, rx, 1);
     tx[1] = rx[0] | (1<<7);
-    ret += I2CWrite(0x6b, tx, 2);
+    ret += I2CWriteNoIsolator(0x6b, tx, 2);
     
     //adc sample takes 24milisec
     DelayMS(100);
     //# read ADC 
     //#REG0x30_VBAT_ADC Register bits 1:12
     tx[0]=0x30;
-    ret += I2CWriteRead(0x6b, tx,1, rx, 2);
+    ret += I2CWriteReadNoIsolator(0x6b, tx,1, rx, 2);
     uint16_t adc_bits = (uint16_t) (rx[0] + (rx[1]<<8));    //value is little endian
     adc_bits &= (0x1ffe);
     adc_bits = adc_bits >> 1;
     float adc_mV = adc_bits * 1.99f; //mili Volt
-    
-   
+       
     //disable ADC
     //#REG0x26_ADC_Control Register,BIT7 ADC_EN
     tx[0]=0x26;
-    ret += I2CWriteRead(0x6b, tx,1, rx, 1);
+    ret += I2CWriteReadNoIsolator(0x6b, tx,1, rx, 1);
     tx[1] = rx[0] & ~(1<<7);
-    ret += I2CWrite(0x6b, tx, 2);
+    ret += I2CWriteNoIsolator(0x6b, tx, 2);
     
     
     //# disable Force a battery discharging current (~30mA)
     //#REG0x16_Charger_Control_1 Register, BIT6 FORCE_IBATDIS
     tx[0]=0x16;
-    ret += I2CWriteRead(0x6b, tx,1, rx, 1);
+    ret += I2CWriteReadNoIsolator(0x6b, tx,1, rx, 1);
     tx[1] = rx[0] & ~(1<<6);
-    ret += I2CWrite(0x6b, tx, 2);
+    ret += I2CWriteNoIsolator(0x6b, tx, 2);
     
     //VSYSMIN value is ~2500mV under 2000mV there is no battery
     //ADC range can be 0mV-5572mV (0h-AF0h)
-    if(ret == 0 && 
+   if(ret == 0 && 
             adc_mV > 2000 && 
             adc_bits < 0xAF0){
         //# Charger enable register of bat manager ic
@@ -153,9 +168,9 @@ int PowMgrEnableDisableCharging(){
         // 1 : enable
         // 0 : disable
         tx[0]=0x16;
-        ret += I2CWriteRead(0x6b, tx,1, rx, 1);
+        ret += I2CWriteReadNoIsolator(0x6b, tx,1, rx, 1);
         tx[1] = rx[0] | (1<<5);
-        ret += I2CWrite(0x6b, tx, 2);
+        ret += I2CWriteNoIsolator(0x6b, tx, 2);
         
         // /CE pin of battery management ic is active low
         // CHG_DISA pin=0 -> Charge enable
@@ -170,10 +185,9 @@ int PowMgrEnableDisableCharging(){
         // 1 : enable
         // 0 : disable
         tx[0]=0x16;
-        ret += I2CWriteRead(0x6b, tx,1, rx, 1);
+        ret += I2CWriteReadNoIsolator(0x6b, tx,1, rx, 1);
         tx[1] = rx[0] & ~(1<<5);
-        ret += I2CWrite(0x6b, tx, 2);
-        
+        ret += I2CWriteNoIsolator(0x6b, tx, 2);
         
         // /CE pin of battery management ic is active low
         // CHG_DISA pin=1 -> Charge disable
@@ -185,7 +199,6 @@ int PowMgrEnableDisableCharging(){
     }
     if(ret != 0){
         SET_BAT_CHCEK_ERR();
-//        CLIENT_DATA[12]=(uint8_t)(ret*-1);
     }
     else{
         CLEAR_BAT_ERR();

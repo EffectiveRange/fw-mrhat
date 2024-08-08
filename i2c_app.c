@@ -21,9 +21,9 @@ bool Client_Application(i2c_client_transfer_event_t event);
 
 // Private variable
 volatile uint8_t CLIENT_DATA[I2C_CLIENT_LOCATION_SIZE] = {
-//    0   1     2    3     4    5     6     7     8     9
-    0x00, 0x0,  0x0, 0x0,  0x0, 0x0,  0x0,  0x00, 0x00, 0x00,
-    0x00, 0x0,  0x0, 0x0,  0x0, 0x0,  0x0,  0x0,  0x0,  0x80 //last has sticky bit
+//    0    1      2     3      4      5       6      7      8      9
+    0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,
+    0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x80 //last has sticky bit
 };
 
 volatile static uint8_t clientLocation = 0x00;
@@ -96,6 +96,7 @@ static int I2CWriteImpl(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len){
     for(size_t i = 0; i<I2C_TRY_CNT; i++){
         uint64_t start_time_ms = GetTimeMs();
         i2c_state=kI2C_Dummy;
+       
         if (!I2C1_Write(dev_addr, tx_buf, tx_len)) {
             DelayMS(10);
             continue;
@@ -136,6 +137,7 @@ static int I2CWriteReadImpl(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uin
     for(size_t i = 0; i<I2C_TRY_CNT; i++){
         uint64_t start_time_ms = GetTimeMs();
         i2c_state=kI2C_Dummy;
+        
         if (!I2C1_WriteRead(dev_addr, tx_buf, tx_len, rx_buf, rx_len)) {
             DelayMS(10);
             continue;
@@ -161,11 +163,10 @@ int I2CWriteRead(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint8_t* rx_bu
     
 }
 int I2CWriteReadNoIsolator(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint8_t* rx_buf, size_t rx_len){
-    
     int rc = I2CWriteReadImpl( dev_addr,  tx_buf, tx_len,  rx_buf,  rx_len);
     return rc;
 }
-
+void I2C1_BusReset(void);
 void I2CSwitchMode(enum I2C1_Mode new_mode){
     if(new_mode == I2C1_Current_Mode()){
         return;
@@ -173,9 +174,11 @@ void I2CSwitchMode(enum I2C1_Mode new_mode){
     I2C1_Switch_Mode(new_mode);
     if(new_mode == I2C1_HOST_MODE){
         I2C1_Host_ReadyCallbackRegister(I2CSuccess);
-        I2C1_Host_CallbackRegister(I2CError);         
+        I2C1_Host_CallbackRegister(I2CError);       
+        I2C1_Client.CallbackRegister(NULL);
     }else if (new_mode == I2C1_CLIENT_MODE){
         I2C1_Client.CallbackRegister(Client_Application);
+        I2C1_Host_ReadyCallbackRegister(NULL);
+        I2C1_Host_CallbackRegister(NULL);   
     }
-    
 }

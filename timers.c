@@ -19,7 +19,7 @@ void MiliSecTimerOverflow(void)
 //            PWR_LED_CTRL_Toggle();
         }
     }   
-    if((free_run_timer % pi_monitor_period) == 0){
+    if((free_run_timer > 1000 && free_run_timer % pi_monitor_period) == 0){
         add_task(TASK_PI_MONITOR, TaskPIMonitor, NULL);
     }
 }

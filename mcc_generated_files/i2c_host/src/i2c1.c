@@ -283,6 +283,7 @@ void __interrupt(irq(I2C1), base(8)) I2C1_ISR(void)
     }
 }
 
+
 void __interrupt(irq(I2C1E), base(8)) I2C1_ERROR_ISR(void)
 {
     if(I2C1_Current_Mode() == I2C1_CLIENT_MODE)
@@ -297,7 +298,7 @@ void __interrupt(irq(I2C1E), base(8)) I2C1_ERROR_ISR(void)
             I2C1_BusReset();
         }
         else if (I2C1_IsAddr() && (I2C1_IsNack() || I2C1ERRbits.NACKIF ))
-        {
+        { 
             i2c1Status.errorState = I2C_ERROR_ADDR_NACK;
             I2C1ERRbits.NACKIF = 0;
             I2C1_StopSend();
@@ -432,7 +433,8 @@ static uint16_t I2C1_CounterGet(void)
     return (uint16_t) ((I2C1CNTH << 8) | I2C1CNTL);
 }
 
-static inline void I2C1_BusReset(void)
+//static inline void I2C1_BusReset(void)
+void I2C1_BusReset(void)
 {
     I2C1_InterruptsClear();
     I2C1_ErrorFlagsClear();
