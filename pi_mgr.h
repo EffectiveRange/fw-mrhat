@@ -17,7 +17,7 @@ extern "C" {
 void PIRunModeChanged();
 
 //RTC int state changed interrup handler
-void RTCPinChanged();
+void RTCPinChanged(void);
 
 
 void TaskPIShutdownOrWakeup(volatile struct TaskDescr* taskd);

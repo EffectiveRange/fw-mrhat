@@ -2,7 +2,7 @@
 #include "mcc_generated_files/system/system.h"
 
 #include "tasks.h"
-#include "i2c_regs.h"
+#include "i2c_regs_data.h"
 #include "timers.h"
 #include "i2c_app.h"
 #include "led_ctrl.h"
@@ -66,10 +66,13 @@ void PIRunModeChanged() {
     }
 }
 
+//todo mve somewhere 
+void BQ_INT_TEST(void);
 
 volatile int pi_monitor=0;
 volatile bool pi_running = false;
 volatile bool pi_monitor_first_time=true;
+volatile uint64_t pi_down_time = 0;
 //this task runs always
 //check if last falling time is older then heartbeat time
 // -> we became I2C master
@@ -100,6 +103,15 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
              //PI went down
             I2CSwitchMode(I2C1_HOST_MODE);
             LEDSetPattern(&sleep_pattern);
+            
+            //do ibat mes
+            pi_down_time=GetTimeMs();
+            BQ_INT_N_SetInterruptHandler(BQ_INT_TEST);
+            //PowMgrMesIBAT sets starts ibat measurement
+            //WD reseted->BQ_INT_TEST invoked
+            //TASK_CHECK_BQ_IRQ created
+            //when wd reseted -> bq interrupt removed
+            PowMgrMesIBAT();
         }
     }
     
@@ -116,12 +128,19 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
             //PI went down
             I2CSwitchMode(I2C1_HOST_MODE);
             LEDSetPattern(&sleep_pattern);
+            
+            //do ibat mes
+            pi_down_time=GetTimeMs();
+            BQ_INT_N_SetInterruptHandler(BQ_INT_TEST);
+            //PowMgrMesIBAT sets starts ibat measurement
+            //WD reseted->BQ_INT_TEST invoked
+            //TASK_CHECK_BQ_IRQ created
+            //when wd reseted -> bq interrupt removed
+            PowMgrMesIBAT();
+
         }
         
-        if(!pi_running){
-             //do current mes
-            //reset watchdog
-        }
+        
         
     }
     
@@ -143,8 +162,36 @@ void TaskWakeupPI(volatile struct TaskDescr* taskd){
     uint8_t tx[2];
     uint8_t rx[2];
     int ret=0;
-    tx[0]=0x1D; //charge stat
-    ret += I2CWriteReadNoIsolator(0x6b, tx,1, rx, 1);
+   
+    //test i2c read, if could not read partid do not check battery return
+    uint8_t i=0;
+    for(int i =0;i<10;i++){
+        //raead partid
+        tx[0]=0x38;
+        ret += I2CWriteReadNoIsolator(0x6b, tx,1, rx, 1);
+        if((rx[0] & (1<<3)) == (1<<3)){
+            break;
+        }
+        DelayMS(10);
+        
+    }   
+    //if read partid failed return
+    if((rx[0] & (1<<3)) != (1<<3)){
+         LEDSetToggleTime(200);//todo remove me
+    }else{
+        LEDSetToggleTime(2000);//todo remove me
+    }
+    
+    
+//    
+//    tx[0]=0x1D; //charge stat
+//    ret += I2CWriteReadNoIsolator(0x6b, tx,1, rx, 1);
+//    if(ret != 0){
+//        LEDSetToggleTime(200);//todo remove me
+//    }else{
+//         LEDSetToggleTime(2000);//todo remove me
+//    }
+    DelayMS(100);
     
     //go back to client mode
     I2CSwitchMode(I2C1_CLIENT_MODE);
@@ -191,27 +238,54 @@ void TaskCheckRTC(volatile struct TaskDescr* taskd){
       
     //af
     tx[0]=0x1D;
-    ret += I2CWriteRead(0x32, tx,1, rx, 1);
+    ret += I2CWriteReadNoIsolator(0x32, tx,1, rx, 1);
     if(!ret){
         const bool af = rx[0] & (1<<3U);
-        if(af){
+        const bool tf = rx[0] & (1<<4U);
+        if(af || tf){
+            if(tf){
+                
+            }
             //wakeup PI
              add_task(TASK_WAKE_UP_PI, TaskWakeupPI, NULL);
              LEDSetToggleTime(1000);
         }
-    } 
+    } else{
+        LEDSetToggleTime(50);//todo remove
+    }
     
     //read reg rtc
     rm_task(TASK_CHECK_RTC);
 }
 int rtc_fall = 0;
 
-void RTCPinChanged() {
+void RTCPinChanged(void) {
     if(!RTC_IRQ_N_GetValue()){
         if(IS_PI_HB_NOT_OK()){
             //fall of RTC PIN
             rtc_fall++;
-            add_task(TASK_CHECK_RTC,TaskCheckRTC,NULL);     
+            add_task(TASK_CHECK_RTC, TaskCheckRTC, NULL);     
+//        }else{
+//            int ret=0;
+//            uint8_t tx[2];
+//            uint8_t rx[2];
+//
+//            //af
+//            tx[0]=0x1D;
+//            ret += I2CWriteReadNoIsolator(0x32, tx,1, rx, 1);
+//            if(!ret){
+//                const bool af = rx[0] & (1<<3U);
+//                const bool tf = rx[0] & (1<<4U);
+//                if(af || tf){
+//                    if(tf){
+//
+//                    }
+//                    LEDSetToggleTime(5000);//todo remove
+//                }
+//            } else{
+//                LEDSetToggleTime(4000);//todo remove
+//            }
+//            
         }
     }
 }

@@ -25,6 +25,7 @@ extern "C" {
         TASK_SET_RESET_MCU_INT_PIN,
         TASK_WAKE_UP_PI,
         TASK_CHECK_RTC,
+        TASK_CHECK_BQ_IRQ,
         TASK_NUM
     };
 

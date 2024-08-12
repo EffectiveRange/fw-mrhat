@@ -16,6 +16,7 @@ extern "C" {
     int PowMgrEnableDisableCharging(void);
     int PowMgrGoToShipMode(void);
     void DelayMS(uint32_t delay_ms);
+    int PowMgrMesIBAT(void);
 
 #ifdef	__cplusplus
 }

@@ -48,6 +48,7 @@
         <itemPath>i2c_app.c</itemPath>
         <itemPath>i2c_app.h</itemPath>
         <itemPath>i2c_regs.h</itemPath>
+        <itemPath>i2c_regs_data.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f4" displayName="LedCtrl" projectFiles="true">
         <itemPath>led_ctrl.c</itemPath>

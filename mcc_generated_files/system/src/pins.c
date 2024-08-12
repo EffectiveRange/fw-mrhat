@@ -36,6 +36,7 @@
 
 void (*RTC_IRQ_N_InterruptHandler)(void);
 void (*PI_RUN_InterruptHandler)(void);
+void (*BQ_INT_N_InterruptHandler)(void);
 
 void PIN_MANAGER_Initialize(void)
 {
@@ -44,7 +45,7 @@ void PIN_MANAGER_Initialize(void)
     */
     LATA = 0x0;
     LATB = 0x80;
-    LATC = 0x81;
+    LATC = 0x1;
 
     /**
     TRISx registers
@@ -112,7 +113,7 @@ void PIN_MANAGER_Initialize(void)
    /**
     IOCx registers 
     */
-    IOCAP = 0x4;
+    IOCAP = 0x0;
     IOCAN = 0x4;
     IOCAF = 0x0;
     IOCWP = 0x0;
@@ -121,12 +122,13 @@ void PIN_MANAGER_Initialize(void)
     IOCBP = 0x0;
     IOCBN = 0x0;
     IOCBF = 0x0;
-    IOCCP = 0x40;
-    IOCCN = 0x40;
+    IOCCP = 0xC0;
+    IOCCN = 0xC0;
     IOCCF = 0x0;
 
     RTC_IRQ_N_SetInterruptHandler(RTC_IRQ_N_DefaultInterruptHandler);
     PI_RUN_SetInterruptHandler(PI_RUN_DefaultInterruptHandler);
+    BQ_INT_N_SetInterruptHandler(BQ_INT_N_DefaultInterruptHandler);
 
     // Enable PIE3bits.IOCIE interrupt 
     PIE3bits.IOCIE = 1; 
@@ -144,6 +146,11 @@ void PIN_MANAGER_IOC(void)
     {
         PI_RUN_ISR();  
     }
+    // interrupt on change for pin BQ_INT_N
+    if(IOCCFbits.IOCCF7 == 1)
+    {
+        BQ_INT_N_ISR();  
+}
 }
    
 /**
@@ -204,6 +211,36 @@ void PI_RUN_SetInterruptHandler(void (* InterruptHandler)(void)){
 void PI_RUN_DefaultInterruptHandler(void){
     // add your PI_RUN interrupt custom code
     // or set custom function using PI_RUN_SetInterruptHandler()
+}
+   
+/**
+   BQ_INT_N Interrupt Service Routine
+*/
+void BQ_INT_N_ISR(void) {
+
+    // Add custom BQ_INT_N code
+
+    // Call the interrupt handler for the callback registered at runtime
+    if(BQ_INT_N_InterruptHandler)
+    {
+        BQ_INT_N_InterruptHandler();
+    }
+    IOCCFbits.IOCCF7 = 0;
+}
+
+/**
+  Allows selecting an interrupt handler for BQ_INT_N at application runtime
+*/
+void BQ_INT_N_SetInterruptHandler(void (* InterruptHandler)(void)){
+    BQ_INT_N_InterruptHandler = InterruptHandler;
+}
+
+/**
+  Default interrupt handler for BQ_INT_N
+*/
+void BQ_INT_N_DefaultInterruptHandler(void){
+    // add your BQ_INT_N interrupt custom code
+    // or set custom function using BQ_INT_N_SetInterruptHandler()
 }
 /**
  End of File

@@ -49,7 +49,8 @@ static void I2C1_DefaultReadyCallback(void);
 /* I2C1 event system interfaces */
 static void I2C1_ReadStart(void);
 static void I2C1_WriteStart(void);
-static void I2C1_Close(void);
+//static void I2C1_Close(void);//todo reenable
+ void I2C1_Close(void);//todo remove
 static void I2C1_DefaultCallback(void);
 
 /* I2C1 interfaces */
@@ -382,7 +383,8 @@ static void I2C1_WriteStart(void)
     I2C1_StartSend();
 }
 
-static void I2C1_Close(void)
+//static //todo was statc
+void I2C1_Close(void)
 {
     i2c1Status.busy = false;
     i2c1Status.address = 0xFF;

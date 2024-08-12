@@ -38,7 +38,7 @@
 #include "main.h"
 #include "timers.h"
 #include "i2c_app.h"
-#include "i2c_regs.h"
+#include "i2c_regs_data.h"
 #include "led_ctrl.h"
 #include "pi_mgr.h"
 /*
@@ -94,6 +94,8 @@ void OnOffSwithcPressed(enum ONOFFTypes type) {
     switch (type) {
         case BTN_1L:
             add_task(TASK_PI_SHUTDOWN_OR_WAKEUP,TaskPIShutdownOrWakeup,NULL);
+            
+            
 //            ShutdownButtonPressed();
             break;
         case BTN_1S_1L:
@@ -116,6 +118,12 @@ void OnOffSwithcPressed(enum ONOFFTypes type) {
 }
 
 
+
+//todo move me somewhere
+void BQ_INT_TEST();
+int read_bq_IRQ=0;
+void read_bq(volatile struct TaskDescr* taskd);
+//end todo
 int main(){
     SYSTEM_Initialize();
     I2C1_Multi_Initialize();
@@ -147,22 +155,78 @@ int main(){
     TMR1_OverflowCallbackRegister(MiliSecTimerOverflow);
     
     //go to host mode
-    I2C_SEL_N_SetLow();
     I2CSwitchMode(I2C1_HOST_MODE);
     
     
     //set charge enable when battery is present
-    PowMgrEnableDisableCharging();
+    PowMgrEnableDisableCharging();    
     
     //go back to client mode
     I2CSwitchMode(I2C1_CLIENT_MODE);
-    I2C_SEL_N_SetHigh();
     
     //led control setup
     //set led 0 by default
     PWM1_16BIT_Period_SetInterruptHandler(LED_UpdateCallback);
     LEDSetValue(0);
+
+    //todo FECCC check this out
+#if 0
+    //todo remove timer
+    //go to host mode
+    I2CSwitchMode(I2C1_HOST_MODE);
+    int ret=0;
+    uint8_t tx[2];
+    uint8_t rx[2];
     
+    //disable timer, set 1sec period
+    //BYTE 0x1C bit4 -> 0
+    tx[0]=0x1C;
+    ret += I2CWriteReadNoIsolator(0x32, tx,1, rx, 1);
+    tx[1]=rx[0];
+    tx[1] &= ~(1<<4);//TE=0
+    tx[1] &= ~(0x3); //TSEL:0:2=0 => 1sec period
+    ret += I2CWriteNoIsolator(0x32, tx,2);
+     
+    
+    //TIMER_counter0=10
+    tx[0]=0x1A;
+    tx[1]=0xA;
+    ret += I2CWriteNoIsolator(0x32, tx,2);
+    //TIMER_counter1=0
+    tx[0]=0x1B;
+    tx[1]=0x0;
+    ret += I2CWriteNoIsolator(0x32, tx,2);
+    
+    //Control Reg0
+    tx[0]=0x1E;
+    ret += I2CWriteReadNoIsolator(0x32, tx,1, rx, 1);
+    tx[1]=rx[0];
+    tx[1] |= (1<<4);//TIE=1
+    tx[1] &= ~(0x7); //TSTP=0,TBKE=0, TBKON=0,
+    ret += I2CWriteNoIsolator(0x32, tx,2);
+    
+    
+    //Flag Register
+    tx[0]=0x1D;
+    ret += I2CWriteReadNoIsolator(0x32, tx,1, rx, 1);
+    tx[1]=rx[0];
+    tx[1] &= ~(1<<4); //TF=0
+    ret += I2CWriteNoIsolator(0x32, tx,2);
+    
+    
+    //enable timer
+    tx[0]=0x1C;
+    ret += I2CWriteReadNoIsolator(0x32, tx,1, rx, 1);
+    tx[1]=rx[0];
+    tx[1] |= (1<<4);//TEN=1
+    ret += I2CWriteNoIsolator(0x32, tx,2);
+    //go back to client mode
+    I2CSwitchMode(I2C1_CLIENT_MODE);
+#endif
+    //end todo
+    
+    
+   
     run_tasks();
     return 0;
 }

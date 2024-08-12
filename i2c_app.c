@@ -2,7 +2,7 @@
 #include "mcc_generated_files/system/system.h"
 #include "i2c_app.h"
 #include "timers.h"
-#include "i2c_regs.h"
+#include "i2c_regs_data.h"
 
 
 typedef enum {
@@ -12,7 +12,7 @@ typedef enum {
 }I2CState;
 
 volatile I2CState i2c_state = kI2C_Dummy;
-
+void I2C1_Close(void);//todo remove
 
 
 //Private functions
@@ -22,8 +22,8 @@ bool Client_Application(i2c_client_transfer_event_t event);
 // Private variable
 volatile uint8_t CLIENT_DATA[I2C_CLIENT_LOCATION_SIZE] = {
 //    0    1      2     3      4      5       6      7      8      9
-    0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,
-    0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x80 //last has sticky bit
+    0x00,  0x80,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,
+    0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x01,  0x00,  0x06 //last has sticky bit
 };
 
 volatile static uint8_t clientLocation = 0x00;
@@ -103,6 +103,7 @@ static int I2CWriteImpl(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len){
         }
         while(i2c_state==kI2C_Dummy){
             if(GetTimeMs() - start_time_ms > I2C_TMOUT_MS){
+                I2C1_Close();//todo remove
                 return -1;
             }
         }
@@ -125,12 +126,14 @@ int I2CWriteNoIsolator(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len){
 }
 
 
-
+volatile int a=0,b=0;//todo remove
 void I2CSuccess(){
     i2c_state=kI2C_Success;
+    a++;//todo remove
 }
 void I2CError(){
     i2c_state=kI2C_Error;
+    b++;//todo remove
 }
 
 static int I2CWriteReadImpl(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint8_t* rx_buf, size_t rx_len){
@@ -142,8 +145,10 @@ static int I2CWriteReadImpl(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uin
             DelayMS(10);
             continue;
         }
+        
         while(i2c_state==kI2C_Dummy){
             if((GetTimeMs() - start_time_ms) > I2C_TMOUT_MS){
+                I2C1_Close();//todo remove
                 return -1;
             }
         }
@@ -175,10 +180,9 @@ void I2CSwitchMode(enum I2C1_Mode new_mode){
     if(new_mode == I2C1_HOST_MODE){
         I2C1_Host_ReadyCallbackRegister(I2CSuccess);
         I2C1_Host_CallbackRegister(I2CError);       
-        I2C1_Client.CallbackRegister(NULL);
+        I2C_SEL_N_SetLow();//disable PI from I2C bus
     }else if (new_mode == I2C1_CLIENT_MODE){
         I2C1_Client.CallbackRegister(Client_Application);
-        I2C1_Host_ReadyCallbackRegister(NULL);
-        I2C1_Host_CallbackRegister(NULL);   
+        I2C_SEL_N_SetHigh();//enable PI from I2C bus
     }
 }
