@@ -15,7 +15,7 @@ extern "C" {
 
     uint64_t GetTimeMs(void);
     void DelayMS(uint32_t delay_ms);
-
+    void MiliSecTimerOverflow(void);
 
 
 #ifdef	__cplusplus

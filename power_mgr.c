@@ -5,12 +5,10 @@
 #include "timers.h"
 #include "i2c_regs_data.h"
 #include "power_mgr.h"
+#include "led_ctrl.h"
 
 
 extern volatile uint8_t CLIENT_DATA[];
-
-
-#define BQ_I2C_ADDR (0x6b)
 
 void PowMgrSystemReset(volatile struct TaskDescr* taskd){
     
@@ -55,9 +53,6 @@ void PowMgrSystemReset(volatile struct TaskDescr* taskd){
 //    return ret;
 }
 int PowMgrGoToShipMode(void){
-    
-    
-    
         
     uint8_t tx[2];
     uint8_t rx[2];
@@ -93,77 +88,65 @@ volatile int ibatcont = 0;
 int read_bq_IRQ=0;
 volatile int bq_read_cnt=0;
 volatile int bq_read_cnt2=0;
-volatile uint64_t dfff=0;//todo remove
-volatile uint64_t pi_down_time;//todo remove
 
-void read_bq(volatile struct TaskDescr* taskd){
+
+
+//2-56
+volatile uint8_t tx_all[2];
+volatile uint8_t rx_all[56];
+void ReadAll(void){
+    
+    int ret=0;
+    tx_all[0]=0x2;
+    ret += I2CWriteReadNoIsolator(BQ_I2C_ADDR, tx_all,1, &rx_all[2], 54);
+    
+}
+volatile int16_t ibat_signed=0;
+void PowMgrReadIBAT(volatile struct TaskDescr* taskd){
     uint8_t tx[2];
     uint8_t rx[2];
     int ret=0;
-    
-    bq_read_cnt++;
     
     //read ibat adc
     //REG0x1D_Charger_Status_0
     tx[0] = 0x1d;
     ret += I2CWriteReadNoIsolator(BQ_I2C_ADDR, tx,1, rx, 1);
-    if (rx[0] & (1<<0)){
-        bq_read_cnt2++;
-        //wd timer expired
-        // reset watchdog
-        //#REG0x16_Charger_Control_1 Register, 
-        // BIT2 WATCHDOG reset
-//        tx[0]=0x16;
-//        ret += I2CWriteReadNoIsolator(BQ_I2C_ADDR, tx,1, rx, 1);
-//        tx[1] = rx[0] | (1<<2);
-//        ret += I2CWriteNoIsolator(BQ_I2C_ADDR, tx, 2);
-
-
+    //todo do not check adc done
+    // if (rx[0] & (1<<0){
+    if ((rx[0] & (1<<0)) || (rx[0] & (1<<6))){
+        
         //read ibat adc
         //REG0x2A_IBAT_ADC Register
         tx[0] = 0x2A;
         ret += I2CWriteReadNoIsolator(BQ_I2C_ADDR, tx,1, rx, 2);
         CLIENT_DATA[REG_IBAT_ADDR] =rx[0];
         CLIENT_DATA[REG_IBAT_ADDR+1] =rx[1];
-//        ibatcont = (int)((rx[0] | (rx[1]<<8))) /4;
-//        //todo clean,nice
-//        //Little endian
-//        CLIENT_DATA[REG_IBAT_ADDR] = ((ibatcont & 0xFFFF) & 0xFF ) ;
-//        CLIENT_DATA[REG_IBAT_ADDR+1] = ((ibatcont & 0xFFFF) & 0xFF00 ) >>8;
+        ibat_signed = (int16_t)((uint16_t)(rx[1]<<8) | rx[0]);
+        LEDSetToggleTime(1000);
+        
+        //disable BQ irq handler
         BQ_INT_N_SetInterruptHandler(NULL);
-        dfff = GetTimeMs() - pi_down_time;
-        dfff+=10;
         
     }
     rm_task(TASK_CHECK_BQ_IRQ);   
 
     
 }
-//todo move me somewhere
-void BQ_INT_TEST(){
+void BQ_INT_PinChanged(){
     if(BQ_INT_N_GetValue()){
         //rising edge
         return;
     }
     //fallin edege
-//    read_bq_IRQ=1;
-    add_task(TASK_CHECK_BQ_IRQ,read_bq,NULL);   
+    add_task(TASK_CHECK_BQ_IRQ,PowMgrReadIBAT,NULL);   
 }
-
-volatile int ibat1=0;
-volatile int ibat2=0;
-volatile int ibat3=0;
+//Start IBAT ADC measurement
+volatile bool ibat_first_time=true;
 int PowMgrMesIBAT(){
+  
     uint8_t tx[2];
     uint8_t rx[2];
     int ret=0;
-    
-    
-     //read ibat adc
-    //REG0x2A_IBAT_ADC Register
-    tx[0] = 0x2A;
-    ret += I2CWriteReadNoIsolator(BQ_I2C_ADDR, tx,1, rx, 2);
-    ibat1 = (int)((rx[0] | (rx[1]<<8)) >> 2);
     
     // reset watchdog
     //#REG0x16_Charger_Control_1 Register, 
@@ -188,60 +171,14 @@ int PowMgrMesIBAT(){
     ret += I2CWriteReadNoIsolator(BQ_I2C_ADDR, tx,1, rx, 1);
     //set bits
     // bit7:ADC_EN=enable, bit3:running average, bit2:start new conversion
-    tx[1] = rx[0] | (1<<7) | (1<<3) | (1<<2); 
+    //bit4:5 ADC_SAMPLE=3 (9bit)
+    tx[1] = rx[0] | (1<<7) | (1<<3) | (1<<2) | (1<<4) | (1<<5); 
     //clear bits
     //bit6:ADC_RATE=0 (continous mes)
     //bit4:5 ADC_SAMPLE=0 (12bit)
-    tx[1] = tx[1] & (~(1<<6)) & (~( 1<<4 | (1<<5))) ;    
-    
-    
-    
-//    //todo remove SINGLE ADC read
-//    //bit3 ADC_AVG=0 single value
-//    tx[1] = tx[1] & (~(1<<3));   
-//    //end todo
-//    ret += I2CWriteNoIsolator(BQ_I2C_ADDR, tx, 2);
-    
-    
-    //todo test ibat stuff
-    
-//    
-//    //todo remove mew
-//    DelayMS(1000);
-//    //read ibat adc
-//    //REG0x2A_IBAT_ADC Register
-//    tx[0] = 0x2A;
-//    ret += I2CWriteReadNoIsolator(BQ_I2C_ADDR, tx,1, rx, 2);
-//    ibat2 = (int)((rx[0] | (rx[1]<<8)) >> 2);
-//    
-//    //todo remove mew
-//    DelayMS(1000);
-//    //read ibat adc
-//    //REG0x2A_IBAT_ADC Register
-//    tx[0] = 0x2A;
-//    ret += I2CWriteReadNoIsolator(BQ_I2C_ADDR, tx,1, rx, 2);
-//    ibat3 = (int)((rx[0] | (rx[1]<<8)) >> 2);
-//    
-//    
-//    
-//    //todo remove mew
-//    DelayMS(3000);
-//    //read ibat adc
-//    //REG0x2A_IBAT_ADC Register
-//    tx[0] = 0x2A;
-//    ret += I2CWriteReadNoIsolator(BQ_I2C_ADDR, tx,1, rx, 2);
-//    ibat1 = (int)((rx[0] | (rx[1]<<8)) >> 2);
-    
-    //todo remove me- set wd to 50sec
-     // reset watchdog
-    //#REG0x16_Charger_Control_1 Register, 
-    // BIT0:1 ==> 1 WATCHDOG 50sec
-//    tx[0]=0x16;
-//    ret += I2CWriteReadNoIsolator(BQ_I2C_ADDR, tx,1, rx, 1);
-//    tx[1] = rx[0] | (1<<1);
-//    tx[1] = tx[0] & (~(1<<0));
-//    ret += I2CWriteNoIsolator(BQ_I2C_ADDR, tx, 2);
-    
+    tx[1] = tx[1] & (~(1<<6)); 
+    ret += I2CWriteNoIsolator(BQ_I2C_ADDR, tx, 2);
+     
     return ret;
 }
 //note: set i2c to host mode before calling
@@ -360,7 +297,6 @@ int PowMgrEnableDisableCharging(){
     else{
         CLEAR_BAT_ERR();
     }
-    
     
     return ret;
     

@@ -16,7 +16,7 @@ void MiliSecTimerOverflow(void)
     free_run_timer++;
     if(timer_blink_period != 0){
         if((free_run_timer % timer_blink_period) == 0){
-//            PWR_LED_CTRL_Toggle();
+//            PWR_LED_CTRL_Toggle(); //todo remove 
         }
     }   
     if((free_run_timer > 1000 && free_run_timer % pi_monitor_period) == 0){

@@ -11,6 +11,8 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
+    #define BQ_I2C_ADDR (0x6b)
+
     uint64_t GetTimeMs(void);
     void PowMgrSystemReset(volatile struct TaskDescr*);
     int PowMgrEnableDisableCharging(void);

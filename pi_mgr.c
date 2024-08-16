@@ -67,7 +67,7 @@ void PIRunModeChanged() {
 }
 
 //todo mve somewhere 
-void BQ_INT_TEST(void);
+void BQ_INT_PinChanged(void);
 
 volatile int pi_monitor=0;
 volatile bool pi_running = false;
@@ -99,6 +99,7 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
             //PI got up
             I2CSwitchMode(I2C1_CLIENT_MODE);
             LEDSetToggleTime(100);
+            BQ_INT_N_SetInterruptHandler(NULL);
         }else{
              //PI went down
             I2CSwitchMode(I2C1_HOST_MODE);
@@ -106,7 +107,7 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
             
             //do ibat mes
             pi_down_time=GetTimeMs();
-            BQ_INT_N_SetInterruptHandler(BQ_INT_TEST);
+            BQ_INT_N_SetInterruptHandler(BQ_INT_PinChanged);
             //PowMgrMesIBAT sets starts ibat measurement
             //WD reseted->BQ_INT_TEST invoked
             //TASK_CHECK_BQ_IRQ created
@@ -121,7 +122,7 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
             //PI got up
             I2CSwitchMode(I2C1_CLIENT_MODE);
             LEDSetToggleTime(100);
-            timer_blink_period=100;
+            BQ_INT_N_SetInterruptHandler(NULL);
         }
         
         else if(!pi_running && prev_pi_running){
@@ -131,7 +132,7 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
             
             //do ibat mes
             pi_down_time=GetTimeMs();
-            BQ_INT_N_SetInterruptHandler(BQ_INT_TEST);
+            BQ_INT_N_SetInterruptHandler(BQ_INT_PinChanged);
             //PowMgrMesIBAT sets starts ibat measurement
             //WD reseted->BQ_INT_TEST invoked
             //TASK_CHECK_BQ_IRQ created
@@ -175,22 +176,7 @@ void TaskWakeupPI(volatile struct TaskDescr* taskd){
         DelayMS(10);
         
     }   
-    //if read partid failed return
-    if((rx[0] & (1<<3)) != (1<<3)){
-         LEDSetToggleTime(200);//todo remove me
-    }else{
-        LEDSetToggleTime(2000);//todo remove me
-    }
     
-    
-//    
-//    tx[0]=0x1D; //charge stat
-//    ret += I2CWriteReadNoIsolator(0x6b, tx,1, rx, 1);
-//    if(ret != 0){
-//        LEDSetToggleTime(200);//todo remove me
-//    }else{
-//         LEDSetToggleTime(2000);//todo remove me
-//    }
     DelayMS(100);
     
     //go back to client mode
@@ -204,6 +190,7 @@ void TaskWakeupPI(volatile struct TaskDescr* taskd){
 //button 1L (1 long press calls this)
 //if PI is running -> request it to shut down
 //if PI is not running -> wakeup PI
+
 void TaskPIShutdownOrWakeup(volatile struct TaskDescr* taskd){
     //if PI running
     if(IS_PI_HB_OK()){
@@ -217,7 +204,7 @@ void TaskPIShutdownOrWakeup(volatile struct TaskDescr* taskd){
         //set MCU_INT high after 100msec
         mcu_int_set_reset.active=true;
         mcu_int_set_reset.pin_val=true;
-        mcu_int_set_reset.time_ms=GetTimeMs()+100; //+ 100 msec        
+        mcu_int_set_reset.time_ms=GetTimeMs()+100; //+ 100 msec
         add_task(TASK_SET_RESET_MCU_INT_PIN, SetResetMCU_INT_Pin, (void*)&mcu_int_set_reset);
         
     }else{
@@ -243,49 +230,20 @@ void TaskCheckRTC(volatile struct TaskDescr* taskd){
         const bool af = rx[0] & (1<<3U);
         const bool tf = rx[0] & (1<<4U);
         if(af || tf){
-            if(tf){
-                
-            }
             //wakeup PI
              add_task(TASK_WAKE_UP_PI, TaskWakeupPI, NULL);
-             LEDSetToggleTime(1000);
         }
-    } else{
-        LEDSetToggleTime(50);//todo remove
-    }
+    } 
     
     //read reg rtc
     rm_task(TASK_CHECK_RTC);
 }
-int rtc_fall = 0;
 
 void RTCPinChanged(void) {
     if(!RTC_IRQ_N_GetValue()){
         if(IS_PI_HB_NOT_OK()){
             //fall of RTC PIN
-            rtc_fall++;
-            add_task(TASK_CHECK_RTC, TaskCheckRTC, NULL);     
-//        }else{
-//            int ret=0;
-//            uint8_t tx[2];
-//            uint8_t rx[2];
-//
-//            //af
-//            tx[0]=0x1D;
-//            ret += I2CWriteReadNoIsolator(0x32, tx,1, rx, 1);
-//            if(!ret){
-//                const bool af = rx[0] & (1<<3U);
-//                const bool tf = rx[0] & (1<<4U);
-//                if(af || tf){
-//                    if(tf){
-//
-//                    }
-//                    LEDSetToggleTime(5000);//todo remove
-//                }
-//            } else{
-//                LEDSetToggleTime(4000);//todo remove
-//            }
-//            
+            add_task(TASK_CHECK_RTC, TaskCheckRTC, NULL);  
         }
     }
 }

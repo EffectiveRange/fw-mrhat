@@ -18,7 +18,7 @@ extern "C" {
     
     
 #define I2C_TRY_CNT 3U
-#define I2C_TMOUT_MS 100U
+#define I2C_TMOUT_MS 100U //todo check if lower is better
 
 extern volatile  uint8_t CLIENT_DATA[] ;
 

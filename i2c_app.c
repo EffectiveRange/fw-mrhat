@@ -12,7 +12,7 @@ typedef enum {
 }I2CState;
 
 volatile I2CState i2c_state = kI2C_Dummy;
-void I2C1_Close(void);//todo remove
+void I2C1_Close(void);
 
 
 //Private functions
@@ -69,7 +69,7 @@ bool Client_Application(i2c_client_transfer_event_t event) {
         case I2C_CLIENT_TRANSFER_EVENT_ERROR: //Error Event Handler
             clientLocation = 0x00;
             i2c_client_error_t errorState = I2C1_Client.ErrorGet();
-            CLIENT_DATA[REG_STAT_I2C_ERR_AND_STICKY_ADDR]=errorState | 0x80;
+            CLIENT_DATA[REG_STAT_I2C_ERR_AND_STICKY_ADDR] |= errorState;
             if (errorState == I2C_CLIENT_ERROR_BUS_COLLISION) {
                 // Bus Collision Error Handling
             } else if (errorState == I2C_CLIENT_ERROR_WRITE_COLLISION) {
@@ -98,12 +98,17 @@ static int I2CWriteImpl(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len){
         i2c_state=kI2C_Dummy;
        
         if (!I2C1_Write(dev_addr, tx_buf, tx_len)) {
+            if(i>0){
+                //todo check if return or continue
+                I2C1_Close();//todo remove
+            }
             DelayMS(10);
             continue;
         }
         while(i2c_state==kI2C_Dummy){
             if(GetTimeMs() - start_time_ms > I2C_TMOUT_MS){
-                I2C1_Close();//todo remove
+                //todo check if continue of return
+                I2C1_Close();//todo check if needed
                 return -1;
             }
         }
@@ -114,7 +119,22 @@ static int I2CWriteImpl(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len){
     
     return -1;
 }
+
+int I2CWriteByte(uint8_t dev_addr, uint8_t reg_addr, uint8_t val){
+    uint8_t tx[2] = {reg_addr,val};
+    I2C_SEL_N_SetLow(); //disable pi i2c bus    
+    int rc = I2CWriteImpl( dev_addr,  tx, 2);
+    I2C_SEL_N_SetHigh(); //enable pi i2c bus
+    return rc;
+}
+int I2CWriteByteNoIsolator(uint8_t dev_addr, uint8_t reg_addr, uint8_t val){
+    uint8_t tx[2] = {reg_addr,val};
+    int rc = I2CWriteImpl( dev_addr,  tx, 2);
+    return rc;
+}
+
 int I2CWrite(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len){
+    
     I2C_SEL_N_SetLow(); //disable pi i2c bus
     int rc = I2CWriteImpl(dev_addr, tx_buf, tx_len);
     I2C_SEL_N_SetHigh(); //enable pi i2c bus
@@ -126,14 +146,11 @@ int I2CWriteNoIsolator(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len){
 }
 
 
-volatile int a=0,b=0;//todo remove
 void I2CSuccess(){
     i2c_state=kI2C_Success;
-    a++;//todo remove
 }
 void I2CError(){
     i2c_state=kI2C_Error;
-    b++;//todo remove
 }
 
 static int I2CWriteReadImpl(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint8_t* rx_buf, size_t rx_len){
@@ -142,12 +159,17 @@ static int I2CWriteReadImpl(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uin
         i2c_state=kI2C_Dummy;
         
         if (!I2C1_WriteRead(dev_addr, tx_buf, tx_len, rx_buf, rx_len)) {
+            if(i>0){
+                //todo check if return or continue
+                I2C1_Close();//todo remove
+            }
             DelayMS(10);
             continue;
         }
         
         while(i2c_state==kI2C_Dummy){
             if((GetTimeMs() - start_time_ms) > I2C_TMOUT_MS){
+                //todo check if return or continue
                 I2C1_Close();//todo remove
                 return -1;
             }
@@ -159,6 +181,17 @@ static int I2CWriteReadImpl(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uin
     return -1;
 }
 
+int I2CReadByte(uint8_t dev_addr, uint8_t reg_addr, uint8_t* dest){
+    
+    I2C_SEL_N_SetLow(); //disable pi i2c bus    
+    int rc = I2CWriteReadImpl( dev_addr,  &reg_addr, 1,  dest,  1);
+    I2C_SEL_N_SetHigh(); //enable pi i2c bus
+    return rc;
+}
+int I2CReadByteNoIsolator(uint8_t dev_addr, uint8_t reg_addr, uint8_t* dest){
+    int rc = I2CWriteReadImpl( dev_addr,  &reg_addr, 1,  dest,  1);
+    return rc;
+}
 int I2CWriteRead(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint8_t* rx_buf, size_t rx_len){
      
     I2C_SEL_N_SetLow(); //disable pi i2c bus    
@@ -171,7 +204,6 @@ int I2CWriteReadNoIsolator(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint
     int rc = I2CWriteReadImpl( dev_addr,  tx_buf, tx_len,  rx_buf,  rx_len);
     return rc;
 }
-void I2C1_BusReset(void);
 void I2CSwitchMode(enum I2C1_Mode new_mode){
     if(new_mode == I2C1_Current_Mode()){
         return;

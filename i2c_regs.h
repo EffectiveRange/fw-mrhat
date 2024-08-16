@@ -65,11 +65,11 @@ extern "C" {
 #define REG_STAT_0_ADDR 0xA
 #define SHUT_REQ_POS 0
 #define SHUT_REQ (1<<SHUT_REQ_POS)
-#define SHUT_REQ_MASK (~(1<<SHUT_REQ_POS)) & 0xFF
+#define SHUT_REQ_MASK ((1<<SHUT_REQ_POS)) & 0xFF
 
 #define PI_HB_POS 1
 #define PI_HB (1<<PI_HB_POS)
-#define PI_HB_MASK (~(1<<PI_HB_POS)) & 0xFF
+#define PI_HB_MASK ((1<<PI_HB_POS)) & 0xFF
 
 //BYTE 0xB: power related
 //  bit0: battery present
@@ -78,11 +78,11 @@ extern "C" {
     
 #define BAT_AVAIL_POS 0
 #define BAT_AVAIL (1<<BAT_AVAIL_POS)
-#define BAT_AVAIL_MASK (~(1<<BAT_AVAIL_POS)) & 0xFF
+#define BAT_AVAIL_MASK ((1<<BAT_AVAIL_POS)) & 0xFF
     
 #define BAT_CHECK_ERR_POS 1
 #define BAT_CHECK_ERR (1<<BAT_CHECK_ERR_POS)
-#define BAT_CHECK_ERR_MASK (~(1<<BAT_CHECK_ERR_POS)) & 0xFF
+#define BAT_CHECK_ERR_MASK ((1<<BAT_CHECK_ERR_POS)) & 0xFF
 
 
 //BYTE 0xC-0xD Battery current - IBAT 

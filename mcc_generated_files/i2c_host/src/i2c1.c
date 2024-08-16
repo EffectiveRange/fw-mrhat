@@ -49,7 +49,7 @@ static void I2C1_DefaultReadyCallback(void);
 /* I2C1 event system interfaces */
 static void I2C1_ReadStart(void);
 static void I2C1_WriteStart(void);
-//static void I2C1_Close(void);//todo reenable
+//static void I2C1_Close(void);//todo if used reenable
  void I2C1_Close(void);//todo remove
 static void I2C1_DefaultCallback(void);
 
