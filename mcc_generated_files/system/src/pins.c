@@ -12,7 +12,7 @@
 */
 
 /*
-? [2024] Microchip Technology Inc. and its subsidiaries.
+© [2024] Microchip Technology Inc. and its subsidiaries.
 
     Subject to your compliance with these terms, you may use Microchip 
     software and any derivatives exclusively with Microchip products. 
@@ -43,14 +43,14 @@ void PIN_MANAGER_Initialize(void)
    /**
     LATx registers
     */
-    LATA = 0x0;
+    LATA = 0x10;
     LATB = 0x80;
     LATC = 0x1;
 
     /**
     TRISx registers
     */
-    TRISA = 0x17;
+    TRISA = 0x7;
     TRISB = 0x0;
     TRISC = 0xC2;
 
@@ -64,14 +64,14 @@ void PIN_MANAGER_Initialize(void)
     /**
     WPUx registers
     */
-    WPUA = 0x0;
+    WPUA = 0x10;
     WPUB = 0x0;
     WPUC = 0x0;
 
     /**
     ODx registers
     */
-    ODCONA = 0x0;
+    ODCONA = 0x10;
     ODCONB = 0xE0;
     ODCONC = 0xB9;
 
@@ -122,7 +122,7 @@ void PIN_MANAGER_Initialize(void)
     IOCBP = 0x0;
     IOCBN = 0x0;
     IOCBF = 0x0;
-    IOCCP = 0xC0;
+    IOCCP = 0x0;
     IOCCN = 0xC0;
     IOCCF = 0x0;
 
