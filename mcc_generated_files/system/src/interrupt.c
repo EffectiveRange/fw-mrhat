@@ -11,7 +11,7 @@
 */
 
 /*
-© [2024] Microchip Technology Inc. and its subsidiaries.
+? [2024] Microchip Technology Inc. and its subsidiaries.
 
     Subject to your compliance with these terms, you may use Microchip 
     software and any derivatives exclusively with Microchip products. 
@@ -64,6 +64,8 @@ void  INTERRUPT_Initialize (void)
     IPR0bits.INT2IP = 1;
     IPR3bits.IOCIP = 1;
     IPR3bits.TMR0IP = 1;
+    IPR3bits.TMR1IP = 1;
+    IPR4bits.PWM1PIP = 1;
     IPR7bits.I2C1RXIP = 1;
     IPR7bits.I2C1TXIP = 1;
     IPR7bits.I2C1IP = 1;

@@ -13,6 +13,9 @@
           <itemPath>mcc_generated_files/i2c_host/i2c_host_types.h</itemPath>
           <itemPath>mcc_generated_files/i2c_host/i2c1.h</itemPath>
         </logicalFolder>
+        <logicalFolder name="pwm" displayName="pwm" projectFiles="true">
+          <itemPath>mcc_generated_files/pwm/pwm1_16bit.h</itemPath>
+        </logicalFolder>
         <logicalFolder name="system" displayName="system" projectFiles="true">
           <itemPath>mcc_generated_files/system/mvio.h</itemPath>
           <itemPath>mcc_generated_files/system/interrupt.h</itemPath>
@@ -41,9 +44,15 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <logicalFolder name="f2" displayName="BatMgr" projectFiles="true">
-        <itemPath>power_mgr.c</itemPath>
-        <itemPath>power_mgr.h</itemPath>
+      <logicalFolder name="f5" displayName="I2C_App" projectFiles="true">
+        <itemPath>i2c_app.c</itemPath>
+        <itemPath>i2c_app.h</itemPath>
+        <itemPath>i2c_regs.h</itemPath>
+        <itemPath>i2c_regs_data.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f4" displayName="LedCtrl" projectFiles="true">
+        <itemPath>led_ctrl.c</itemPath>
+        <itemPath>led_ctrl.h</itemPath>
       </logicalFolder>
       <logicalFolder name="MCC Generated Files"
                      displayName="MCC Generated Files"
@@ -53,6 +62,11 @@
             <itemPath>mcc_generated_files/i2c_host/src/i2c1.c</itemPath>
             <itemPath>mcc_generated_files/i2c_host/src/i2c1_client.c</itemPath>
             <itemPath>mcc_generated_files/i2c_host/src/i2c1_multi.c</itemPath>
+          </logicalFolder>
+        </logicalFolder>
+        <logicalFolder name="pwm" displayName="pwm" projectFiles="true">
+          <logicalFolder name="src" displayName="src" projectFiles="true">
+            <itemPath>mcc_generated_files/pwm/src/pwm1_16bit.c</itemPath>
           </logicalFolder>
         </logicalFolder>
         <logicalFolder name="system" displayName="system" projectFiles="true">
@@ -76,11 +90,24 @@
         <itemPath>onoff.h</itemPath>
         <itemPath>onoff.c</itemPath>
       </logicalFolder>
+      <logicalFolder name="f7" displayName="PIMgr" projectFiles="true">
+        <itemPath>pi_mgr.c</itemPath>
+        <itemPath>pi_mgr.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f2" displayName="PowerMgr" projectFiles="true">
+        <itemPath>power_mgr.c</itemPath>
+        <itemPath>power_mgr.h</itemPath>
+      </logicalFolder>
       <logicalFolder name="f3" displayName="TaskMgr" projectFiles="true">
         <itemPath>tasks.h</itemPath>
         <itemPath>tasks.c</itemPath>
       </logicalFolder>
+      <logicalFolder name="f6" displayName="Timers" projectFiles="true">
+        <itemPath>timers.c</itemPath>
+        <itemPath>timers.h</itemPath>
+      </logicalFolder>
       <itemPath>main.c</itemPath>
+      <itemPath>main.h</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>

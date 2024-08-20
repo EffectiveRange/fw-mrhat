@@ -11,7 +11,7 @@
  */
 
 /*
-© [2023] Microchip Technology Inc. and its subsidiaries.
+? [2024] Microchip Technology Inc. and its subsidiaries.
 
     Subject to your compliance with these terms, you may use Microchip 
     software and any derivatives exclusively with Microchip products. 
@@ -49,7 +49,8 @@ static void I2C1_DefaultReadyCallback(void);
 /* I2C1 event system interfaces */
 static void I2C1_ReadStart(void);
 static void I2C1_WriteStart(void);
-static void I2C1_Close(void);
+//static void I2C1_Close(void);//todo if used reenable
+ void I2C1_Close(void);//todo remove
 static void I2C1_DefaultCallback(void);
 
 /* I2C1 interfaces */
@@ -107,8 +108,8 @@ void I2C1_Initialize(void)
     I2C1CON1 = 0x80;
     /* ABD enabled; GCEN disabled; ACNT disabled; SDAHT 30 ns hold time; BFRET 8 I2C Clock pulses;  */
     I2C1CON2 = 0x8;
-    /* ACNTMD 8 bits are loaded into I2CxCNTL; FME Standard Mode;  */
-    I2C1CON3 = 0x0;
+    /* ACNTMD 8 bits are loaded into I2CxCNTL; FME Fast Mode;  */
+    I2C1CON3 = 0x4;
     /* CLK HFINTOSC;  */
     I2C1CLK = 0x2;
     /* WRIF Data byte not detected; CNTIF Byte count is not zero; RSCIF Restart condition not detected; PCIF Stop condition not detected; ACKTIF Acknowledge sequence not detected; ADRIF Address not detected; SCIF Start condition not detected;  */
@@ -122,8 +123,8 @@ void I2C1_Initialize(void)
     /* Count register */
     I2C1CNTL = 0x0;
     I2C1CNTH = 0x0;
-    /* BAUD 15;  */
-    I2C1BAUD = 0xF;
+    /* BAUD 39;  */
+    I2C1BAUD = 0x27;
     /* BTOC Reserved;  */
     I2C1BTOC = 0x0;
     I2C1_InterruptsEnable();
@@ -283,6 +284,7 @@ void __interrupt(irq(I2C1), base(8)) I2C1_ISR(void)
     }
 }
 
+
 void __interrupt(irq(I2C1E), base(8)) I2C1_ERROR_ISR(void)
 {
     if(I2C1_Current_Mode() == I2C1_CLIENT_MODE)
@@ -297,7 +299,7 @@ void __interrupt(irq(I2C1E), base(8)) I2C1_ERROR_ISR(void)
             I2C1_BusReset();
         }
         else if (I2C1_IsAddr() && (I2C1_IsNack() || I2C1ERRbits.NACKIF ))
-        {
+        { 
             i2c1Status.errorState = I2C_ERROR_ADDR_NACK;
             I2C1ERRbits.NACKIF = 0;
             I2C1_StopSend();
@@ -381,7 +383,8 @@ static void I2C1_WriteStart(void)
     I2C1_StartSend();
 }
 
-static void I2C1_Close(void)
+//static //todo was statc
+void I2C1_Close(void)
 {
     i2c1Status.busy = false;
     i2c1Status.address = 0xFF;
@@ -432,7 +435,8 @@ static uint16_t I2C1_CounterGet(void)
     return (uint16_t) ((I2C1CNTH << 8) | I2C1CNTL);
 }
 
-static inline void I2C1_BusReset(void)
+//static inline void I2C1_BusReset(void)
+void I2C1_BusReset(void)
 {
     I2C1_InterruptsClear();
     I2C1_ErrorFlagsClear();

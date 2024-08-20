@@ -169,8 +169,12 @@ static void DefaultHandler(enum ONOFFTypes type) {
 }
 
 void ONOFF_Initialize() {
+    //falling edge pin interrup handler
     INT0_SetInterruptHandler(_start_bqqon_sampling);
+    
+    //sampling timer irq handler
     BQQON_Sampling_OverflowCallbackRegister(_sample_bqqon);
+    
     ONOFF_CallbackRegister(DefaultHandler);
     BQQONState_to_idle();
 

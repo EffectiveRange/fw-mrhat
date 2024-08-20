@@ -11,9 +11,14 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
+    #define BQ_I2C_ADDR (0x6b)
 
-    int CheckBattery(void);
-
+    uint64_t GetTimeMs(void);
+    void PowMgrSystemReset(volatile struct TaskDescr*);
+    int PowMgrEnableDisableCharging(void);
+    int PowMgrGoToShipMode(void);
+    void DelayMS(uint32_t delay_ms);
+    int PowMgrMesIBAT(void);
 
 #ifdef	__cplusplus
 }

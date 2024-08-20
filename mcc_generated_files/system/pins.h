@@ -68,6 +68,7 @@
 #define RTC_IRQ_N_SetOpenDrain()       do { ODCONAbits.ODCA2 = 1; } while(0)
 #define RTC_IRQ_N_SetAnalogMode()      do { ANSELAbits.ANSELA2 = 1; } while(0)
 #define RTC_IRQ_N_SetDigitalMode()     do { ANSELAbits.ANSELA2 = 0; } while(0)
+#define RA2_SetInterruptHandler  RTC_IRQ_N_SetInterruptHandler
 
 // get/set RA4 aliases
 #define ER_MODE_0_TRIS                 TRISAbits.TRISA4
@@ -309,6 +310,7 @@
 #define BQ_INT_N_SetOpenDrain()       do { ODCONCbits.ODCC7 = 1; } while(0)
 #define BQ_INT_N_SetAnalogMode()      do { ANSELCbits.ANSELC7 = 1; } while(0)
 #define BQ_INT_N_SetDigitalMode()     do { ANSELCbits.ANSELC7 = 0; } while(0)
+#define RC7_SetInterruptHandler  BQ_INT_N_SetInterruptHandler
 
 /**
  * @ingroup  pinsdriver
@@ -325,6 +327,46 @@ void PIN_MANAGER_Initialize (void);
  * @return none
  */
 void PIN_MANAGER_IOC(void);
+
+/**
+ * @ingroup  pinsdriver
+ * @brief Interrupt on Change Handler for the RTC_IRQ_N pin functionality
+ * @param none
+ * @return none
+ */
+void RTC_IRQ_N_ISR(void);
+
+/**
+ * @ingroup  pinsdriver
+ * @brief Interrupt Handler Setter for RTC_IRQ_N pin interrupt-on-change functionality.
+ *        Allows selecting an interrupt handler for RTC_IRQ_N at application runtime
+ * @pre Pins intializer called
+ * @param InterruptHandler function pointer.
+ * @return none
+ */
+void RTC_IRQ_N_SetInterruptHandler(void (* InterruptHandler)(void));
+
+/**
+ * @ingroup  pinsdriver
+ * @brief Dynamic Interrupt Handler for RTC_IRQ_N pin.
+ *        This is a dynamic interrupt handler to be used together with the RTC_IRQ_N_SetInterruptHandler() method.
+ *        This handler is called every time the RTC_IRQ_N ISR is executed and allows any function to be registered at runtime.
+ * @pre Pins intializer called
+ * @param none
+ * @return none
+ */
+extern void (*RTC_IRQ_N_InterruptHandler)(void);
+
+/**
+ * @ingroup  pinsdriver
+ * @brief Default Interrupt Handler for RTC_IRQ_N pin. 
+ *        This is a predefined interrupt handler to be used together with the RTC_IRQ_N_SetInterruptHandler() method.
+ *        This handler is called every time the RTC_IRQ_N ISR is executed. 
+ * @pre Pins intializer called
+ * @param none
+ * @return none
+ */
+void RTC_IRQ_N_DefaultInterruptHandler(void);
 
 /**
  * @ingroup  pinsdriver
@@ -365,6 +407,46 @@ extern void (*PI_RUN_InterruptHandler)(void);
  * @return none
  */
 void PI_RUN_DefaultInterruptHandler(void);
+
+/**
+ * @ingroup  pinsdriver
+ * @brief Interrupt on Change Handler for the BQ_INT_N pin functionality
+ * @param none
+ * @return none
+ */
+void BQ_INT_N_ISR(void);
+
+/**
+ * @ingroup  pinsdriver
+ * @brief Interrupt Handler Setter for BQ_INT_N pin interrupt-on-change functionality.
+ *        Allows selecting an interrupt handler for BQ_INT_N at application runtime
+ * @pre Pins intializer called
+ * @param InterruptHandler function pointer.
+ * @return none
+ */
+void BQ_INT_N_SetInterruptHandler(void (* InterruptHandler)(void));
+
+/**
+ * @ingroup  pinsdriver
+ * @brief Dynamic Interrupt Handler for BQ_INT_N pin.
+ *        This is a dynamic interrupt handler to be used together with the BQ_INT_N_SetInterruptHandler() method.
+ *        This handler is called every time the BQ_INT_N ISR is executed and allows any function to be registered at runtime.
+ * @pre Pins intializer called
+ * @param none
+ * @return none
+ */
+extern void (*BQ_INT_N_InterruptHandler)(void);
+
+/**
+ * @ingroup  pinsdriver
+ * @brief Default Interrupt Handler for BQ_INT_N pin. 
+ *        This is a predefined interrupt handler to be used together with the BQ_INT_N_SetInterruptHandler() method.
+ *        This handler is called every time the BQ_INT_N ISR is executed. 
+ * @pre Pins intializer called
+ * @param none
+ * @return none
+ */
+void BQ_INT_N_DefaultInterruptHandler(void);
 
 
 #endif // PINS_H

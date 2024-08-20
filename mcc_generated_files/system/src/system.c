@@ -11,7 +11,7 @@
 */
 
 /*
-© [2024] Microchip Technology Inc. and its subsidiaries.
+? [2024] Microchip Technology Inc. and its subsidiaries.
 
     Subject to your compliance with these terms, you may use Microchip 
     software and any derivatives exclusively with Microchip products. 
@@ -40,20 +40,49 @@
   Section: Driver APIs
 */
 
+/** 
+* @ingroup systemdriver
+* @brief Initializes the CPU module.
+* @param None.
+* @return None.
+*/
+void CPU_Initialize(void);
 
 void SYSTEM_Initialize(void)
 {
     CLOCK_Initialize();
     PIN_MANAGER_Initialize();
     BQQON_Sampling_Initialize();
-    
-    //free running timer 1msec irq
-    Timer1_Initialize();
-    Timer1_Start();
-    
-    I2C1_Multi_Initialize();
+    CPU_Initialize();
+    I2C1_Host_Initialize();
     MVIO_Initialize();
+    PWM1_16BIT_Initialize();
+    Timer1_Initialize();
     INTERRUPT_Initialize();
+}
+
+void CPU_Initialize(void)
+{
+    //PRLOCKED unlocked; 
+    PRLOCK = 0x0;
+    //PR priority level 7; 
+    SCANPR = 0x7;
+    //PR priority level 7; 
+    DMA1PR = 0x7;
+    //PR priority level 7; 
+    DMA2PR = 0x7;
+    //PR priority level 7; 
+    DMA3PR = 0x7;
+    //PR priority level 7; 
+    DMA4PR = 0x7;
+    //PR priority level 7; 
+    MAINPR = 0x7;
+    //PR priority level 7; 
+    ISRPR = 0x7;
+    //PRODH undefined; 
+    PRODH = 0x0;
+    //PRODL undefined; 
+    PRODL = 0x0;
 }
 
 
