@@ -105,7 +105,7 @@ void OnOffSwithcPressed(enum ONOFFTypes type) {
 //            I2C_SEL_N_Toggle();
             break;
         case BTN_1S_1S_1L:
-            add_task(TASK_POWER_IC_SYSTEM_RESET,PowMgrSystemReset,NULL);
+//            add_task(TASK_POWER_IC_SYSTEM_RESET,PowMgrSystemReset,NULL);
             
 //            if (I2C1_Current_Mode() == I2C1_HOST_MODE) {
 //                add_task(TASK_I2C_WAKEUP, read_device_id, regAddrBuff2);
@@ -119,6 +119,7 @@ void OnOffSwithcPressed(enum ONOFFTypes type) {
 int main(){
 //    ibat_test(); //todo remove
     SYSTEM_Initialize();
+    
     ER_MODE_0_SetHigh();
 
     I2C1_Multi_Initialize();

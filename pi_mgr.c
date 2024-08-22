@@ -107,12 +107,13 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
             
             //do ibat mes
             pi_down_time=GetTimeMs();
-            BQ_INT_N_SetInterruptHandler(BQ_INT_PinChanged);
+            
+//            BQ_INT_N_SetInterruptHandler(BQ_INT_PinChanged);
             //PowMgrMesIBAT sets starts ibat measurement
             //WD reseted->BQ_INT_TEST invoked
             //TASK_CHECK_BQ_IRQ created
             //when wd reseted -> bq interrupt removed
-            PowMgrMesIBAT();
+//            PowMgrMesIBAT();
         }
     }
     
@@ -130,12 +131,13 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
             
             //do ibat mes
             pi_down_time=GetTimeMs();
-            BQ_INT_N_SetInterruptHandler(BQ_INT_PinChanged);
+            
+//            BQ_INT_N_SetInterruptHandler(BQ_INT_PinChanged);
             //PowMgrMesIBAT sets starts ibat measurement
             //WD reseted->BQ_INT_TEST invoked
             //TASK_CHECK_BQ_IRQ created
             //when wd reseted -> bq interrupt removed
-            PowMgrMesIBAT();
+//            PowMgrMesIBAT();
 
         }
         
