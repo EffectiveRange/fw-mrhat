@@ -175,19 +175,19 @@
          <hash>fc0bf9201032bad18f7f20129aaff63b3a7bcf940597d9c6332d718247d40b77</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\i2c_host\i2c1.h</file>
+         <file>mcc_generated_files/i2c_host/i2c1.h</file>
          <hash>0fc1b67eba348c50f4726873890c9dc11e8e91d4606c14aa4944fe8698744a4e</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\i2c_host\i2c_host_event_types.h</file>
+         <file>mcc_generated_files/i2c_host/i2c_host_event_types.h</file>
          <hash>a2f728989319819a97f88de5caa86bdc3c9dd7455edba4be5a844e15e47a05a6</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\i2c_host\i2c_host_interface.h</file>
+         <file>mcc_generated_files/i2c_host/i2c_host_interface.h</file>
          <hash>bb1c84af0a5bc1cec9116406588fc576f18a1a916e287d91767aa8a56b4c8deb</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\i2c_host\i2c_host_types.h</file>
+         <file>mcc_generated_files/i2c_host/i2c_host_types.h</file>
          <hash>d9d47ff48bce20782fc2ee3bd6208a89f5dc62e6c4c4e9147111bceefd6876fb</hash>
       </entry>
       <entry>
@@ -203,27 +203,19 @@
          <hash>f06515135da35737fbcfe9798614f0a2c9508627df721e21803edd355f533891</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\pwm\pwm1_16bit.h</file>
-         <hash>0678dc99667b9de015a27f78a2911577cdba771886ba591ceb681c1b1a4dc990</hash>
-      </entry>
-      <entry>
-         <file>mcc_generated_files\pwm\src\pwm1_16bit.c</file>
-         <hash>f06515135da35737fbcfe9798614f0a2c9508627df721e21803edd355f533891</hash>
-      </entry>
-      <entry>
-         <file>mcc_generated_files\system\clock.h</file>
+         <file>mcc_generated_files/system/clock.h</file>
          <hash>5cc959f812221711d97937a5c5370165f1587489f24a6c519aaba264ff433d12</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\system\config_bits.h</file>
+         <file>mcc_generated_files/system/config_bits.h</file>
          <hash>2c78b83118956d4e3d4bd05e9bece8098ac42a175c2d200a53aa741d76d79f2c</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\system\interrupt.h</file>
+         <file>mcc_generated_files/system/interrupt.h</file>
          <hash>ee34ba07d85519a26500d4b8b383b4791fb4453ac322dd0da105a7a2864899c6</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\system\mvio.h</file>
+         <file>mcc_generated_files/system/mvio.h</file>
          <hash>c080ad6bf40bcb2ee867b24761816948aeea330e3e3a732b9a4451efe2d80e66</hash>
       </entry>
       <entry>
@@ -231,11 +223,11 @@
          <hash>8d7d21ca044a0948d559fb91612cd36edb7578e35f48ac8a0c50a7483296b1c1</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\system\src\clock.c</file>
+         <file>mcc_generated_files/system/src/clock.c</file>
          <hash>e5e6149872a734491b04985c80ade850c61c5d4956715d632c1641ebc0dd328e</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\system\src\config_bits.c</file>
+         <file>mcc_generated_files/system/src/config_bits.c</file>
          <hash>6f1b64f22c9b9f27c2a04859f9718153bdaf228c384e81ab610043ed43f63dbc</hash>
       </entry>
       <entry>
@@ -243,7 +235,7 @@
          <hash>214cdaf1439c3b82ec29713ef617212672aee04d290d578b6b7501093445310e</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\system\src\mvio.c</file>
+         <file>mcc_generated_files/system/src/mvio.c</file>
          <hash>8a22246538796ac7d11994d1032f90f27afdab451b4826ab132df58d0d438048</hash>
       </entry>
       <entry>
@@ -259,23 +251,23 @@
          <hash>b1c342c6ce6d5aadf4f982959b6ee9b4133bde3bde6682552b3e146d77f6fade</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\timer\src\tmr0.c</file>
+         <file>mcc_generated_files/timer/src/tmr0.c</file>
          <hash>7627fe153552d2505cb5c9fd91e8be2e7c216ee47a29da7ff58036ec5dd3cf80</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\timer\src\tmr1.c</file>
+         <file>mcc_generated_files/timer/src/tmr1.c</file>
          <hash>0ca0ea75de215ccee45f23a33e90b7879ef4c966275a55bcd337582af990d30c</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\timer\timer_interface.h</file>
+         <file>mcc_generated_files/timer/timer_interface.h</file>
          <hash>a4d378f645d42fd44e09983310e5da2de850bc3c6b6e24152a1e3d3b5121f4a7</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\timer\tmr0.h</file>
+         <file>mcc_generated_files/timer/tmr0.h</file>
          <hash>63a742aab737a27e7e00e72352c4aa0ee8a2f8e89067966866a8d223fcfe0254</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\timer\tmr1.h</file>
+         <file>mcc_generated_files/timer/tmr1.h</file>
          <hash>87af100dcd88d4571bf4eb0ff9e878d943140f4538bb6fb3dcf4f6f047555b9d</hash>
       </entry>
    </generatedFileHashHistoryMap>
