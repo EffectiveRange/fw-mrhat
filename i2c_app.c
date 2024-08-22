@@ -4,15 +4,15 @@
 #include "timers.h"
 #include "i2c_regs_data.h"
 
-
 typedef enum {
     kI2C_Dummy,
     kI2C_Error,
     kI2C_Success
-}I2CState;
+} I2CState;
 
 volatile I2CState i2c_state = kI2C_Dummy;
 void I2C1_Close(void);
+void I2C1_BusReset(void);
 
 
 //Private functions
@@ -20,10 +20,12 @@ bool Client_Application(i2c_client_transfer_event_t event);
 
 
 // Private variable
+//NOTES:
+//BYTE 1 MSB is sticky bit
 volatile uint8_t CLIENT_DATA[I2C_CLIENT_LOCATION_SIZE] = {
-//    0    1      2     3      4      5       6      7      8      9
-    0x00,  0x80,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,
-    0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x01,  0x00,  0x07 //last has sticky bit
+    //    0    1      2     3      4      5       6      7      8      9
+    0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x08 
 };
 
 volatile static uint8_t clientLocation = 0x00;
@@ -43,11 +45,11 @@ bool Client_Application(i2c_client_transfer_event_t event) {
                 break;
             } else {
                 //allow only writable registers
-                if(clientLocation<REG_ADDR_WR_START || 
-                        clientLocation>REG_ADDR_WR_END){
+                if (clientLocation < REG_ADDR_WR_START ||
+                        clientLocation > REG_ADDR_WR_END) {
                     clientLocation = 0x00;
                 }
-                
+
                 CLIENT_DATA[clientLocation++] = I2C1_Client.ReadByte();
                 if (clientLocation > REG_ADDR_WR_END) {
                     clientLocation = REG_ADDR_WR_START;
@@ -89,132 +91,146 @@ bool Client_Application(i2c_client_transfer_event_t event) {
     return true;
 }
 
-
-static int I2CWriteImpl(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len){
-    
+static int I2CWriteImpl(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len) {
+    I2CSwitchMode(I2C1_HOST_MODE);
+    int rc = 0;
     //tx_buf: byte0-reg_addr, byte1:... data
-    for(size_t i = 0; i<I2C_TRY_CNT; i++){
+    for (size_t i = 0; i < I2C_TRY_CNT; i++) {
         uint64_t start_time_ms = GetTimeMs();
-        i2c_state=kI2C_Dummy;
-       
+        i2c_state = kI2C_Dummy;
+
         if (!I2C1_Write(dev_addr, tx_buf, tx_len)) {
-            if(i>0){
-                //todo check if return or continue
-                I2C1_Close();//todo remove
-            }
+            I2C1_Close(); //todo remove
+            I2C1_BusReset();
             DelayMS(10);
+            rc = -2;
             continue;
         }
-        while(i2c_state==kI2C_Dummy){
-            if(GetTimeMs() - start_time_ms > I2C_TMOUT_MS){
+        while (i2c_state == kI2C_Dummy) {
+            if (GetTimeMs() - start_time_ms > I2C_TMOUT_MS) {
                 //todo check if continue of return
-                I2C1_Close();//todo check if needed
-                return -1;
+                I2C1_Close(); //todo check if needed
+                I2C1_BusReset();
+                //                return -1;
+                rc = -1;
+                break;
             }
         }
-        if(i2c_state==kI2C_Success){
-            return 0;
+        if (i2c_state == kI2C_Error) {
+            I2C1_Close(); //todo remove
+            I2C1_BusReset();
+            rc = -3;
+        }
+        if (i2c_state == kI2C_Success) {
+            rc = 0;
+            break;
         }
     }
-    
-    return -1;
+
+    I2CSwitchMode(I2C1_CLIENT_MODE);
+    return rc;
 }
 
-int I2CWriteByte(uint8_t dev_addr, uint8_t reg_addr, uint8_t val){
-    uint8_t tx[2] = {reg_addr,val};
+int I2CWriteByte(uint8_t dev_addr, uint8_t reg_addr, uint8_t val) {
+    uint8_t tx[2] = {reg_addr, val};
     I2C_SEL_N_SetLow(); //disable pi i2c bus    
-    int rc = I2CWriteImpl( dev_addr,  tx, 2);
+    int rc = I2CWriteImpl(dev_addr, tx, 2);
     I2C_SEL_N_SetHigh(); //enable pi i2c bus
     return rc;
 }
-int I2CWriteByteNoIsolator(uint8_t dev_addr, uint8_t reg_addr, uint8_t val){
-    uint8_t tx[2] = {reg_addr,val};
-    int rc = I2CWriteImpl( dev_addr,  tx, 2);
-    return rc;
-}
 
-int I2CWrite(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len){
-    
+
+int I2CWrite(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len) {
+
     I2C_SEL_N_SetLow(); //disable pi i2c bus
     int rc = I2CWriteImpl(dev_addr, tx_buf, tx_len);
     I2C_SEL_N_SetHigh(); //enable pi i2c bus
     return rc;
 }
-int I2CWriteNoIsolator(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len){
-    int rc = I2CWriteImpl(dev_addr, tx_buf, tx_len);
-    return rc;
+
+void I2CSuccess() {
+    i2c_state = kI2C_Success;
 }
 
-
-void I2CSuccess(){
-    i2c_state=kI2C_Success;
-}
-void I2CError(){
-    i2c_state=kI2C_Error;
+void I2CError() {
+    i2c_state = kI2C_Error;
 }
 
-static int I2CWriteReadImpl(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint8_t* rx_buf, size_t rx_len){
-    for(size_t i = 0; i<I2C_TRY_CNT; i++){
+static int I2CWriteReadImpl(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len, uint8_t* rx_buf, size_t rx_len) {
+    I2CSwitchMode(I2C1_HOST_MODE);
+    int rc = 0;
+    for (size_t i = 0; i < I2C_TRY_CNT; i++) {
         uint64_t start_time_ms = GetTimeMs();
-        i2c_state=kI2C_Dummy;
-        
+        i2c_state = kI2C_Dummy;
+
         if (!I2C1_WriteRead(dev_addr, tx_buf, tx_len, rx_buf, rx_len)) {
-            if(i>0){
-                //todo check if return or continue
-                I2C1_Close();//todo remove
-            }
+            I2C1_Close(); //todo remove
+            I2C1_BusReset();
             DelayMS(10);
+            rc = -2;
             continue;
         }
-        
-        while(i2c_state==kI2C_Dummy){
-            if((GetTimeMs() - start_time_ms) > I2C_TMOUT_MS){
+
+        while (i2c_state == kI2C_Dummy) {
+            if ((GetTimeMs() - start_time_ms) > I2C_TMOUT_MS) {
                 //todo check if return or continue
-                I2C1_Close();//todo remove
-                return -1;
+                I2C1_Close(); //todo remove
+                I2C1_BusReset();
+                //                return -1;
+                rc = -1;
+                break;
             }
         }
-        if(i2c_state==kI2C_Success){
-            return 0;
+        if (i2c_state == kI2C_Error) {
+            I2C1_Close(); //todo remove
+            I2C1_BusReset();
+            rc = -3;
+        }
+
+        if (i2c_state == kI2C_Success) {
+            rc = 0;
+            break;
         }
     }
-    return -1;
+    I2CSwitchMode(I2C1_CLIENT_MODE);
+    return rc;
 }
 
-int I2CReadByte(uint8_t dev_addr, uint8_t reg_addr, uint8_t* dest){
-    
+int I2CReadByte(uint8_t dev_addr, uint8_t reg_addr, uint8_t* dest) {
+
     I2C_SEL_N_SetLow(); //disable pi i2c bus    
-    int rc = I2CWriteReadImpl( dev_addr,  &reg_addr, 1,  dest,  1);
+    int rc = I2CWriteReadImpl(dev_addr, &reg_addr, 1, dest, 1);
     I2C_SEL_N_SetHigh(); //enable pi i2c bus
     return rc;
 }
-int I2CReadByteNoIsolator(uint8_t dev_addr, uint8_t reg_addr, uint8_t* dest){
-    int rc = I2CWriteReadImpl( dev_addr,  &reg_addr, 1,  dest,  1);
-    return rc;
-}
-int I2CWriteRead(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint8_t* rx_buf, size_t rx_len){
-     
+
+
+int I2CWriteRead(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len, uint8_t* rx_buf, size_t rx_len) {
+
     I2C_SEL_N_SetLow(); //disable pi i2c bus    
-    int rc = I2CWriteReadImpl( dev_addr,  tx_buf, tx_len,  rx_buf,  rx_len);
+    int rc = I2CWriteReadImpl(dev_addr, tx_buf, tx_len, rx_buf, rx_len);
     I2C_SEL_N_SetHigh(); //enable pi i2c bus
     return rc;
-    
+
 }
-int I2CWriteReadNoIsolator(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint8_t* rx_buf, size_t rx_len){
-    int rc = I2CWriteReadImpl( dev_addr,  tx_buf, tx_len,  rx_buf,  rx_len);
+
+int I2CWriteReadWithPI(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len, uint8_t* rx_buf, size_t rx_len) {
+    I2C_SEL_N_SetHigh(); //enable pi i2c bus
+    int rc = I2CWriteReadImpl(dev_addr, tx_buf, tx_len, rx_buf, rx_len);
     return rc;
 }
-void I2CSwitchMode(enum I2C1_Mode new_mode){
-    if(new_mode == I2C1_Current_Mode()){
+
+void I2CSwitchMode(enum I2C1_Mode new_mode) {
+    if (new_mode == I2C1_Current_Mode()) {
         return;
     }
     I2C1_Switch_Mode(new_mode);
-    if(new_mode == I2C1_HOST_MODE){
+    if (new_mode == I2C1_HOST_MODE) {
         I2C1_Host_ReadyCallbackRegister(I2CSuccess);
-        I2C1_Host_CallbackRegister(I2CError);       
-        I2C_SEL_N_SetLow();//disable PI from I2C bus
-    }else if (new_mode == I2C1_CLIENT_MODE){
+        I2C1_Host_CallbackRegister(I2CError);
+//        I2C_SEL_N_SetLow(); //disable PI from I2C bus
+    } else if (new_mode == I2C1_CLIENT_MODE) {
         I2C1_Client.CallbackRegister(Client_Application);
-        I2C_SEL_N_SetHigh();//enable PI from I2C bus
+        I2C_SEL_N_SetHigh(); //enable PI from I2C bus
     }
 }

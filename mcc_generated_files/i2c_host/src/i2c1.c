@@ -60,7 +60,9 @@ static void I2C1_DataTransmit(uint8_t data);
 static uint8_t I2C1_DataReceive(void);
 static void I2C1_CounterSet(uint16_t counter);
 static uint16_t I2C1_CounterGet(void);
-static inline void I2C1_BusReset(void);
+//static inline void I2C1_BusReset(void);
+//todo mate 
+void I2C1_BusReset(void);
 static inline void I2C1_RestartEnable(void);
 static inline void I2C1_RestartDisable(void);
 static void I2C1_StopSend(void);
