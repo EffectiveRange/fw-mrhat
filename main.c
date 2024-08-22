@@ -76,16 +76,16 @@ void retry_read_device_id(void) {
 
 static int client_mode = 0;
 static int host_mode = 0;
-
-void switch_i2c_mode(volatile struct TaskDescr* taskd) {
-    if (taskd->task_state == &client_mode) {
-        I2CSwitchMode(I2C1_CLIENT_MODE);
-        
-    } else {
-        I2CSwitchMode(I2C1_HOST_MODE);
-    }
-    rm_task(TASK_I2C_SWITCH_MODE);
-}
+//
+//void switch_i2c_mode(volatile struct TaskDescr* taskd) {
+//    if (taskd->task_state == &client_mode) {
+//        I2CSwitchMode(I2C1_CLIENT_MODE);
+//        
+//    } else {
+//        I2CSwitchMode(I2C1_HOST_MODE);
+//    }
+//    rm_task(TASK_I2C_SWITCH_MODE);
+//}
 
 
 void OnOffSwithcPressed(enum ONOFFTypes type) {
@@ -148,24 +148,13 @@ int main(){
     //1msec freerunngin timer irq
     TMR1_OverflowCallbackRegister(MiliSecTimerOverflow);
     
-    //go to host mode
-    I2CSwitchMode(I2C1_HOST_MODE);
-    
-    
     //set charge enable when battery is present
     PowMgrEnableDisableCharging();    
-    
-    //go back to client mode
-    I2CSwitchMode(I2C1_CLIENT_MODE);
     
     //led control setup
     //set led 0 by default
     PWM1_16BIT_Period_SetInterruptHandler(LED_UpdateCallback);
     LEDSetValue(0);
-
-
-    
-    
    
     run_tasks();
     return 0;
@@ -225,9 +214,6 @@ void ibat_test(){
     //1msec freerunngin timer irq
     TMR1_OverflowCallbackRegister(MiliSecTimerOverflowMock);
     
-    //go to host mode
-    I2CSwitchMode(I2C1_HOST_MODE);
-    I2C_SEL_N_SetLow();//disable PI from I2C bus
     
     //led control setup
     //set led 0 by default
@@ -343,7 +329,6 @@ void ibat_test(){
     
     //todo remove timer
     //go to host mode
-    I2CSwitchMode(I2C1_HOST_MODE);
     int ret=0;
     uint8_t tx[2];
     uint8_t rx[2];
@@ -351,46 +336,45 @@ void ibat_test(){
     //disable timer, set 1sec period
     //BYTE 0x1C bit4 -> 0
     tx[0]=0x1C;
-    ret += I2CWriteReadNoIsolator(0x32, tx,1, rx, 1);
+    ret += I2CWriteRead(0x32, tx,1, rx, 1);
     tx[1]=rx[0];
     tx[1] &= ~(1<<4);//TE=0
     tx[1] &= ~(0x3); //TSEL:0:2=0 => 1sec period
-    ret += I2CWriteNoIsolator(0x32, tx,2);
+    ret += I2CWrite(0x32, tx,2);
      
     
     //TIMER_counter0=10
     tx[0]=0x1A;
     tx[1]=0xA;
-    ret += I2CWriteNoIsolator(0x32, tx,2);
+    ret += I2CWrite(0x32, tx,2);
     //TIMER_counter1=0
     tx[0]=0x1B;
     tx[1]=0x0;
-    ret += I2CWriteNoIsolator(0x32, tx,2);
+    ret += I2CWrite(0x32, tx,2);
     
     //Control Reg0
     tx[0]=0x1E;
-    ret += I2CWriteReadNoIsolator(0x32, tx,1, rx, 1);
+    ret += I2CWriteRead(0x32, tx,1, rx, 1);
     tx[1]=rx[0];
     tx[1] |= (1<<4);//TIE=1
     tx[1] &= ~(0x7); //TSTP=0,TBKE=0, TBKON=0,
-    ret += I2CWriteNoIsolator(0x32, tx,2);
+    ret += I2CWrite(0x32, tx,2);
     
     
     //Flag Register
     tx[0]=0x1D;
-    ret += I2CWriteReadNoIsolator(0x32, tx,1, rx, 1);
+    ret += I2CWriteRead(0x32, tx,1, rx, 1);
     tx[1]=rx[0];
     tx[1] &= ~(1<<4); //TF=0
-    ret += I2CWriteNoIsolator(0x32, tx,2);
+    ret += I2CWrite(0x32, tx,2);
     
     
     //enable timer
     tx[0]=0x1C;
-    ret += I2CWriteReadNoIsolator(0x32, tx,1, rx, 1);
+    ret += I2CWriteRead(0x32, tx,1, rx, 1);
     tx[1]=rx[0];
     tx[1] |= (1<<4);//TEN=1
-    ret += I2CWriteNoIsolator(0x32, tx,2);
+    ret += I2CWrite(0x32, tx,2);
     //go back to client mode
-    I2CSwitchMode(I2C1_CLIENT_MODE);
     //end todo
 #endif

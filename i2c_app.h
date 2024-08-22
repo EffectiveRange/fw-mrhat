@@ -24,11 +24,11 @@ extern volatile  uint8_t CLIENT_DATA[] ;
 
 
 int I2CWrite(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len);
-int I2CWriteNoIsolator(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len);
+int I2CWriteWithPI(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len);
 
 int I2CWriteRead(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint8_t* rx_buf, size_t rx_len);
-int I2CWriteReadNoIsolator(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint8_t* rx_buf, size_t rx_len);
-
+int I2CWriteReadWithPI(uint8_t dev_addr, uint8_t* tx_buf,size_t tx_len, uint8_t* rx_buf, size_t rx_len);
+//I2CWriteReadWithPi
 void I2CSwitchMode(enum I2C1_Mode new_mode);
 
 #ifdef	__cplusplus
