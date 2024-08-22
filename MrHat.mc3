@@ -191,8 +191,16 @@
          <hash>d9d47ff48bce20782fc2ee3bd6208a89f5dc62e6c4c4e9147111bceefd6876fb</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\i2c_host\src\i2c1.c</file>
+         <file>mcc_generated_files/i2c_host/src/i2c1.c</file>
          <hash>8fa70c98255c68796b923031e5f3fa268e11430e491aefcb3353980967c110dc</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files/pwm/pwm1_16bit.h</file>
+         <hash>0678dc99667b9de015a27f78a2911577cdba771886ba591ceb681c1b1a4dc990</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files/pwm/src/pwm1_16bit.c</file>
+         <hash>f06515135da35737fbcfe9798614f0a2c9508627df721e21803edd355f533891</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\pwm\pwm1_16bit.h</file>
@@ -219,7 +227,7 @@
          <hash>c080ad6bf40bcb2ee867b24761816948aeea330e3e3a732b9a4451efe2d80e66</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\system\pins.h</file>
+         <file>mcc_generated_files/system/pins.h</file>
          <hash>8d7d21ca044a0948d559fb91612cd36edb7578e35f48ac8a0c50a7483296b1c1</hash>
       </entry>
       <entry>
@@ -231,7 +239,7 @@
          <hash>6f1b64f22c9b9f27c2a04859f9718153bdaf228c384e81ab610043ed43f63dbc</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\system\src\interrupt.c</file>
+         <file>mcc_generated_files/system/src/interrupt.c</file>
          <hash>214cdaf1439c3b82ec29713ef617212672aee04d290d578b6b7501093445310e</hash>
       </entry>
       <entry>
@@ -239,15 +247,15 @@
          <hash>8a22246538796ac7d11994d1032f90f27afdab451b4826ab132df58d0d438048</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\system\src\pins.c</file>
+         <file>mcc_generated_files/system/src/pins.c</file>
          <hash>d0106abc5dfa7444a01c79b1a942035580134eeb835f91e30da2386e7c2e9976</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\system\src\system.c</file>
+         <file>mcc_generated_files/system/src/system.c</file>
          <hash>90844b7113de0ababb388681a9ee6771b709e60b9742de6f4522ae08917a04ee</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\system\system.h</file>
+         <file>mcc_generated_files/system/system.h</file>
          <hash>b1c342c6ce6d5aadf4f982959b6ee9b4133bde3bde6682552b3e146d77f6fade</hash>
       </entry>
       <entry>

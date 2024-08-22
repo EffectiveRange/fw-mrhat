@@ -51,6 +51,8 @@ void SetResetMCU_INT_Pin(volatile struct TaskDescr* taskd){
         }else{
             MCU_INT_N_SetLow();
         }
+        //disable set reset 
+        mcu_int_set_reset_p->active = false;
         //rm this task
         rm_task(TASK_SET_RESET_MCU_INT_PIN);
     }
@@ -97,22 +99,21 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
     if(pi_monitor_first_time){
         if(pi_running){
             //PI got up
-            I2CSwitchMode(I2C1_CLIENT_MODE);
             LEDSetToggleTime(100);
             BQ_INT_N_SetInterruptHandler(NULL);
         }else{
              //PI went down
-            I2CSwitchMode(I2C1_HOST_MODE);
             LEDSetPattern(&sleep_pattern);
             
             //do ibat mes
             pi_down_time=GetTimeMs();
-            BQ_INT_N_SetInterruptHandler(BQ_INT_PinChanged);
+            
+//            BQ_INT_N_SetInterruptHandler(BQ_INT_PinChanged);
             //PowMgrMesIBAT sets starts ibat measurement
             //WD reseted->BQ_INT_TEST invoked
             //TASK_CHECK_BQ_IRQ created
             //when wd reseted -> bq interrupt removed
-            PowMgrMesIBAT();
+//            PowMgrMesIBAT();
         }
     }
     
@@ -120,24 +121,23 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
     if(!pi_monitor_first_time){
         if(pi_running && !prev_pi_running){
             //PI got up
-            I2CSwitchMode(I2C1_CLIENT_MODE);
             LEDSetToggleTime(100);
             BQ_INT_N_SetInterruptHandler(NULL);
         }
         
         else if(!pi_running && prev_pi_running){
             //PI went down
-            I2CSwitchMode(I2C1_HOST_MODE);
             LEDSetPattern(&sleep_pattern);
             
             //do ibat mes
             pi_down_time=GetTimeMs();
-            BQ_INT_N_SetInterruptHandler(BQ_INT_PinChanged);
+            
+//            BQ_INT_N_SetInterruptHandler(BQ_INT_PinChanged);
             //PowMgrMesIBAT sets starts ibat measurement
             //WD reseted->BQ_INT_TEST invoked
             //TASK_CHECK_BQ_IRQ created
             //when wd reseted -> bq interrupt removed
-            PowMgrMesIBAT();
+//            PowMgrMesIBAT();
 
         }
         
@@ -152,13 +152,6 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
 
 void TaskWakeupPI(volatile struct TaskDescr* taskd){
     
-    //i2c setup
-    I2CSwitchMode(I2C1_HOST_MODE);
-    //add PI to I2C bus
-    I2C_SEL_N_SetHigh(); //enable pi i2c bus();
-    
-    DelayMS(100);
-    
     //do one transaction
     uint8_t tx[2];
     uint8_t rx[2];
@@ -169,7 +162,7 @@ void TaskWakeupPI(volatile struct TaskDescr* taskd){
     for(int i =0;i<10;i++){
         //raead partid
         tx[0]=0x38;
-        ret += I2CWriteReadNoIsolator(0x6b, tx,1, rx, 1);
+        ret += I2CWriteReadWithPI(0x6b, tx,1, rx, 1);
         if((rx[0] & (1<<3)) == (1<<3)){
             break;
         }
@@ -178,9 +171,6 @@ void TaskWakeupPI(volatile struct TaskDescr* taskd){
     }   
     
     DelayMS(100);
-    
-    //go back to client mode
-    I2CSwitchMode(I2C1_CLIENT_MODE);
     
     //remove myself
     rm_task(TASK_WAKE_UP_PI);
@@ -225,7 +215,7 @@ void TaskCheckRTC(volatile struct TaskDescr* taskd){
       
     //af
     tx[0]=0x1D;
-    ret += I2CWriteReadNoIsolator(0x32, tx,1, rx, 1);
+    ret += I2CWriteRead(0x32, tx,1, rx, 1);
     if(!ret){
         const bool af = rx[0] & (1<<3U);
         const bool tf = rx[0] & (1<<4U);
@@ -242,7 +232,7 @@ void TaskCheckRTC(volatile struct TaskDescr* taskd){
 void RTCPinChanged(void) {
     if(!RTC_IRQ_N_GetValue()){
         if(IS_PI_HB_NOT_OK()){
-            //fall of RTC PIN
+            //fall of RTC PIN and PI is not running
             add_task(TASK_CHECK_RTC, TaskCheckRTC, NULL);  
         }
     }
