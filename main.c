@@ -41,6 +41,7 @@
 #include "i2c_regs_data.h"
 #include "led_ctrl.h"
 #include "pi_mgr.h"
+#include "utils.h"
 /*
     Main application
  */
@@ -115,9 +116,64 @@ void OnOffSwithcPressed(enum ONOFFTypes type) {
 
 }
 
+void one_mhz_test(void){
+    SYSTEM_Initialize();
+    
+//    PWR_LED_CTRL_SetHigh();
+    // Enable the Global Interrupts 
+    INTERRUPT_GlobalInterruptHighEnable();
+    INTERRUPT_GlobalInterruptLowEnable();
+    // Disable the Global Interrupts 
+    //INTERRUPT_GlobalInterruptDisable();
+    //1msec freerunngin timer irq
+    TMR1_OverflowCallbackRegister(MiliSecTimerOverflow);
+    PWM1_16BIT_Period_SetInterruptHandler(LED_UpdateCallback);
+    LEDSetToggleTime(1000);
+    while(1);
+    ER_MODE_0_SetHigh();
 
+    I2C1_Multi_Initialize();
+
+    // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts 
+    // If using interrupts in PIC Mid-Range Compatibility Mode you need to enable the Global Interrupts 
+    // Use the following macros to:
+
+    TASKS_Initialize();
+    ONOFF_Initialize();
+
+    ONOFF_CallbackRegister(OnOffSwithcPressed);
+    
+    //add rtc irq handler
+    RTC_IRQ_N_SetInterruptHandler(RTCPinChanged);
+
+    //enable PI RUN pin irq
+    SET_PI_HB_NOT_OK(); //by default no HB recorded
+    PI_RUN_SetInterruptHandler(PIRunModeChanged);
+    
+    // Enable the Global Interrupts 
+    INTERRUPT_GlobalInterruptHighEnable();
+    INTERRUPT_GlobalInterruptLowEnable();
+    // Disable the Global Interrupts 
+    //INTERRUPT_GlobalInterruptDisable();
+    
+    //1msec freerunngin timer irq
+    TMR1_OverflowCallbackRegister(MiliSecTimerOverflow);
+    
+    //set charge enable when battery is present
+    PowMgrEnableDisableCharging();    
+    
+    //led control setup
+    //set led 0 by default
+//    PWM1_16BIT_Period_SetInterruptHandler(LED_UpdateCallback);
+//    LEDSetValue(0);
+   
+    run_tasks();
+}
 int main(){
+//    one_mhz_test();
 //    ibat_test(); //todo remove
+//    UtilsIBATTest();
+    //end todo
     SYSTEM_Initialize();
     
     ER_MODE_0_SetHigh();

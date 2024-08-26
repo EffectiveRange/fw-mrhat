@@ -52,8 +52,8 @@ void PWM1_16BIT_Initialize(void)
     //PWMERS External Reset Disabled; 
     PWM1ERS = 0x0;
 
-    //PWMCLK FOSC; 
-    PWM1CLK = 0x2;
+    //PWMCLK HFINTOSC; 
+    PWM1CLK = 0x3;
 
     //PWMLDS Autoload disabled; 
     PWM1LDS = 0x0;

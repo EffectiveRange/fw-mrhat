@@ -108,6 +108,8 @@
       </logicalFolder>
       <itemPath>main.c</itemPath>
       <itemPath>main.h</itemPath>
+      <itemPath>utils.c</itemPath>
+      <itemPath>utils.h</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>

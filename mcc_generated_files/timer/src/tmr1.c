@@ -10,7 +10,7 @@
   * @version TMR1 Driver Version 3.1.4
 */
 /*
-© [2024] Microchip Technology Inc. and its subsidiaries.
+? [2024] Microchip Technology Inc. and its subsidiaries.
 
     Subject to your compliance with these terms, you may use Microchip 
     software and any derivatives exclusively with Microchip products. 
@@ -65,12 +65,12 @@ void TMR1_Initialize(void)
     T1GCON = 0x0;
     //TGSS T1GPPS; 
     T1GATE = 0x0;
-    //TMRCS FOSC/4; 
-    T1CLK = 0x1;
-    //TMRH 248; 
-    TMR1H = 0xF8;
-    //TMRL 48; 
-    TMR1L = 0x30;
+    //TMRCS FOSC; 
+    T1CLK = 0x2;
+    //TMRH 252; 
+    TMR1H = 0xFC;
+    //TMRL 24; 
+    TMR1L = 0x18;
 
     // Load the TMR1 value to reload variable
     timer1ReloadVal=((uint16_t)TMR1H << 8) | TMR1L;
@@ -86,8 +86,8 @@ void TMR1_Initialize(void)
     // Enabling TMRI interrupt.
      PIE3bits.TMR1IE = 1;
     
-    //TMRON enabled; TRD16 disabled; nTSYNC do_not_synchronize; TCKPS 1:8; 
-    T1CON = 0x35;
+    //TMRON enabled; TRD16 disabled; nTSYNC do_not_synchronize; TCKPS 1:1; 
+    T1CON = 0x5;
 }
 
 void TMR1_Start(void)

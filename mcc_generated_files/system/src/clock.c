@@ -11,7 +11,7 @@
 */
 
 /*
-© [2024] Microchip Technology Inc. and its subsidiaries.
+? [2024] Microchip Technology Inc. and its subsidiaries.
 
     Subject to your compliance with these terms, you may use Microchip 
     software and any derivatives exclusively with Microchip products. 
@@ -37,8 +37,8 @@
 void CLOCK_Initialize(void)
 {
     // Set the CLOCK CONTROL module to the options selected in the user interface.
-    //NDIV 1; NOSC HFINTOSC; 
-    OSCCON1 = 0x60;
+    //NDIV 64; NOSC HFINTOSC; 
+    OSCCON1 = 0x66;
     //SOSCPWR High power; CSWHOLD may proceed; 
     OSCCON3 = 0x40;
     //EXTOEN disabled; HFOEN disabled; MFOEN disabled; LFOEN disabled; SOSCEN disabled; ADOEN disabled; PLLEN disabled; 
