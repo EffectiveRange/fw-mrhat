@@ -53,6 +53,8 @@ extern "C" {
 #define REG_VAL_I2C_CLIENT_ERROR_TRANSMIT_UNDERFLOW 4
 #define REG_VAL_I2C_CLIENT_ERROR_READ_UNDERFLOW 5
 
+#define REG_CMD_HALT_ACTION 0x8
+#define REG_VAL_HALT_ACTION_RST (1 << 0)
 /**************************************************
  * 
  * BYTE 0xA-0x13 : READONLY REGISTERS

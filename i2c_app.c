@@ -23,9 +23,9 @@ bool Client_Application(i2c_client_transfer_event_t event);
 //NOTES:
 //BYTE 1 MSB is sticky bit
 volatile uint8_t CLIENT_DATA[I2C_CLIENT_LOCATION_SIZE] = {
-    //    0    1      2     3      4      5       6      7      8      9
+//    0    1      2     3      4      5       6      7      8      9
     0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x08 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x09
 };
 
 volatile static uint8_t clientLocation = 0x00;
@@ -48,11 +48,8 @@ bool Client_Application(i2c_client_transfer_event_t event) {
                 if (clientLocation < REG_ADDR_WR_START ||
                         clientLocation > REG_ADDR_WR_END) {
                     clientLocation = 0x00;
-                }
-
-                CLIENT_DATA[clientLocation++] = I2C1_Client.ReadByte();
-                if (clientLocation > REG_ADDR_WR_END) {
-                    clientLocation = REG_ADDR_WR_START;
+                }else{
+                    CLIENT_DATA[clientLocation++] = I2C1_Client.ReadByte();
                 }
             }
             break;

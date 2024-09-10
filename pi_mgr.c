@@ -102,7 +102,12 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
             LEDSetToggleTime(100);
             BQ_INT_N_SetInterruptHandler(NULL);
         }else{
-             //PI went down
+            //PI went down
+            if(CLIENT_DATA[REG_CMD_HALT_ACTION] == REG_VAL_HALT_ACTION_RST)
+            {
+                // Pull reset pin of PI if instructed
+                ER_MODE_0_SetLow();
+            }
             LEDSetPattern(&sleep_pattern);
             
             //do ibat mes
@@ -126,6 +131,11 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
         }
         
         else if(!pi_running && prev_pi_running){
+            if(CLIENT_DATA[REG_CMD_HALT_ACTION] == REG_VAL_HALT_ACTION_RST)
+            {
+                // Pull reset pin of PI if instructed
+                ER_MODE_0_SetLow();
+            }
             //PI went down
             LEDSetPattern(&sleep_pattern);
             
@@ -151,7 +161,7 @@ void TaskPIMonitor(volatile struct TaskDescr* taskd){
 }
 
 void TaskWakeupPI(volatile struct TaskDescr* taskd){
-    
+    ER_MODE_0_SetHigh();
     //do one transaction
     uint8_t tx[2];
     uint8_t rx[2];
