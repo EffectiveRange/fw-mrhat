@@ -11,7 +11,7 @@
  */
 
 /*
-ï¿½ [2023] Microchip Technology Inc. and its subsidiaries.
+© [2024] Microchip Technology Inc. and its subsidiaries.
 
     Subject to your compliance with these terms, you may use Microchip 
     software and any derivatives exclusively with Microchip products. 
@@ -119,9 +119,11 @@ void OnOffSwithcPressed(enum ONOFFTypes type) {
 int main(){
 //    ibat_test(); //todo remove
     SYSTEM_Initialize();
+    //PI_5V_DISA_SetHigh();   
+//    PI_5V_DISA_SetLow();
     
-    ER_MODE_0_SetHigh();
 
+   
     I2C1_Multi_Initialize();
 
     // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts 
@@ -157,6 +159,16 @@ int main(){
     PWM1_16BIT_Period_SetInterruptHandler(LED_UpdateCallback);
     LEDSetValue(0);
    
+    while(0){ 
+        IO_RA0_Toggle();
+        IO_RA1_Toggle();
+        PI_5V_DISA_SetHigh();
+        DelayMS(3000);
+         PI_5V_DISA_SetLow();
+        DelayMS(3000);
+
+    }
+    PI_5V_DISA_SetLow();
     run_tasks();
     return 0;
 }

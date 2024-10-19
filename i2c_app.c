@@ -130,18 +130,14 @@ static int I2CWriteImpl(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len) {
 
 int I2CWriteByte(uint8_t dev_addr, uint8_t reg_addr, uint8_t val) {
     uint8_t tx[2] = {reg_addr, val};
-    I2C_SEL_N_SetLow(); //disable pi i2c bus    
     int rc = I2CWriteImpl(dev_addr, tx, 2);
-    I2C_SEL_N_SetHigh(); //enable pi i2c bus
     return rc;
 }
 
 
 int I2CWrite(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len) {
 
-    I2C_SEL_N_SetLow(); //disable pi i2c bus
     int rc = I2CWriteImpl(dev_addr, tx_buf, tx_len);
-    I2C_SEL_N_SetHigh(); //enable pi i2c bus
     return rc;
 }
 
@@ -195,24 +191,19 @@ static int I2CWriteReadImpl(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len, ui
 
 int I2CReadByte(uint8_t dev_addr, uint8_t reg_addr, uint8_t* dest) {
 
-    I2C_SEL_N_SetLow(); //disable pi i2c bus    
     int rc = I2CWriteReadImpl(dev_addr, &reg_addr, 1, dest, 1);
-    I2C_SEL_N_SetHigh(); //enable pi i2c bus
     return rc;
 }
 
 
 int I2CWriteRead(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len, uint8_t* rx_buf, size_t rx_len) {
 
-    I2C_SEL_N_SetLow(); //disable pi i2c bus    
     int rc = I2CWriteReadImpl(dev_addr, tx_buf, tx_len, rx_buf, rx_len);
-    I2C_SEL_N_SetHigh(); //enable pi i2c bus
     return rc;
 
 }
 
 int I2CWriteReadWithPI(uint8_t dev_addr, uint8_t* tx_buf, size_t tx_len, uint8_t* rx_buf, size_t rx_len) {
-    I2C_SEL_N_SetHigh(); //enable pi i2c bus
     int rc = I2CWriteReadImpl(dev_addr, tx_buf, tx_len, rx_buf, rx_len);
     return rc;
 }
@@ -228,6 +219,5 @@ void I2CSwitchMode(enum I2C1_Mode new_mode) {
 //        I2C_SEL_N_SetLow(); //disable PI from I2C bus
     } else if (new_mode == I2C1_CLIENT_MODE) {
         I2C1_Client.CallbackRegister(Client_Application);
-        I2C_SEL_N_SetHigh(); //enable PI from I2C bus
     }
 }

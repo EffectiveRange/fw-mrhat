@@ -47,7 +47,7 @@ static void __idle() {
     CPUDOZEbits.IDLEN = 1;
     SLEEP();
     __nop();
-    __nop();
+     __nop();
     __nop();
     __nop();
     __nop();
